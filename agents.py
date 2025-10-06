@@ -9,35 +9,49 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
     raise ValueError("❌ GROQ_API_KEY not found. Check your .env file")
+# Model Selection function
 
-llm = LLM(
-    model="groq/llama-3.1-8b-instant",
-    api_key=groq_api_key
-)
+def select_model(choice):
+    model_map = {
+        "Llama 3.1 8B Instant": "groq/llama-3.1-8b-instant",
+        "Gemma 2 9B": "groq/gemma2-9b-it",
+        "Llama 3.3 7B Versatile":"groq/llama-3.3-70b-versatile"
+    }
+
+    selected = model_map.get(choice, "groq/llama-3.1-8b-instant") 
+    print(f"✅ Using model: {selected}")
+    
+    return LLM(model=selected, api_key=groq_api_key)
 
 # Agent For
-agent1 = Agent(
+agent_for = Agent(
     role="Debate For",
-    goal="Defend the topic with strong arguments",
-    backstory="An expert debater skilled at finding supporting evidence.",
-    verbose=True,  
-    llm=llm
+    goal="Defend the topic with well-researched, evidence-based reasoning.",
+    backstory=(
+        "You are a persuasive debater and researcher who uses data, logic, and real-world examples "
+        "to strongly support the given statement. You are confident and present structured, factual points."
+    ),
+    verbose=True  
 )
 
 # Agent Against
-agent2 = Agent(
-    role="Debater Against",
-    goal="Counter the topic with logical reasoning",
-    backstory="A critical thinker who always questions assumptions.",
-    verbose=True,
-    llm=llm
+agent_against = Agent(
+    role="Debate Against",
+    goal="Critically challenge the topic using analytical counterpoints and limitations.",
+    backstory=(
+        "You are a skeptic and logical thinker who spots weaknesses, exceptions, and overlooked issues. "
+        "You question assumptions, highlight risks, and counter with alternative perspectives or evidence."
+    ),
+    verbose=True
 )
 
 # Mediator / Summarizer
 summarizer = Agent(
-    role="Summarizer",
-    goal="Summarize debates into balanced insights",
-    backstory="A neutral judge who condenses debates into clear recommendations.",
-    verbose=True,
-    llm=llm
+     role="Summarizer",
+    goal="Synthesize the debate into balanced insights for user decision-making.",
+    backstory=(
+        "You are a neutral moderator and analyst who listens carefully to both sides. "
+        "You evaluate argument strength, note key pros and cons, and produce a concise, objective conclusion."
+    ),
+    verbose=True
 )
