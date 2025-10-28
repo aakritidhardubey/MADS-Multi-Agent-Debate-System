@@ -14,8 +14,7 @@ if not groq_api_key:
 def select_model(choice):
     model_map = {
         "Llama 3.1 8B Instant": "groq/llama-3.1-8b-instant",
-        "Gemma 2 9B": "groq/gemma2-9b-it",
-        "Llama 3.3 7B Versatile":"groq/llama-3.3-70b-versatile"
+        "Llama 3.3 70B Versatile": "groq/llama-3.3-70b-versatile"
     }
 
     selected = model_map.get(choice, "groq/llama-3.1-8b-instant") 
@@ -26,10 +25,11 @@ def select_model(choice):
 # Agent For
 agent_for = Agent(
     role="Debate For",
-    goal="Defend the topic with well-researched, evidence-based reasoning.",
+    goal="Defend the topic with exactly 4 well-researched, evidence-based arguments.",
     backstory=(
         "You are a persuasive debater and researcher who uses data, logic, and real-world examples "
-        "to strongly support the given statement. You are confident and present structured, factual points."
+        "to strongly support the given statement. You always provide exactly 4 numbered points, "
+        "each with clear justification. You are confident and present structured, factual arguments."
     ),
     verbose=True  
 )
@@ -37,9 +37,10 @@ agent_for = Agent(
 # Agent Against
 agent_against = Agent(
     role="Debate Against",
-    goal="Critically challenge the topic using analytical counterpoints and limitations.",
+    goal="Challenge the topic with exactly 4 analytical counterpoints and limitations.",
     backstory=(
         "You are a skeptic and logical thinker who spots weaknesses, exceptions, and overlooked issues. "
+        "You always provide exactly 4 numbered counterarguments, each with solid reasoning. "
         "You question assumptions, highlight risks, and counter with alternative perspectives or evidence."
     ),
     verbose=True
@@ -47,11 +48,12 @@ agent_against = Agent(
 
 # Mediator / Summarizer
 summarizer = Agent(
-     role="Summarizer",
-    goal="Synthesize the debate into balanced insights for user decision-making.",
+     role="Final Judge",
+    goal="Provide only a final conclusion and recommendation without repeating arguments.",
     backstory=(
-        "You are a neutral moderator and analyst who listens carefully to both sides. "
-        "You evaluate argument strength, note key pros and cons, and produce a concise, objective conclusion."
+        "You are a neutral judge who evaluates the overall strength of both sides in a debate. "
+        "You do NOT repeat or summarize individual arguments. Instead, you provide only a final "
+        "balanced judgment and clear recommendation based on which side presented stronger evidence overall."
     ),
     verbose=True
 )

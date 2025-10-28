@@ -13,31 +13,36 @@ def debate_tasks(topic,llm):
         Task(
             description=(
                 f"Argue FOR the statement: '{topic}'. "
-                "Provide 3–5 well-structured, evidence-based arguments supporting it. "
+                "Provide exactly 4 well-structured, evidence-based arguments supporting it. "
+                "Number each point clearly (1, 2, 3, 4). "
                 "Include examples, statistics, or research where possible. "
-                "Ensure your tone is persuasive, logical, and confident."
+                "Ensure your tone is persuasive, logical, and confident. "
+                "Do not provide more or fewer than 4 points."
             ),
             agent=agent_for,
-            expected_output="3–5 clear points supporting the statement, each with a justification or example."
+            expected_output="Exactly 4 numbered points supporting the statement, each with clear justification and examples."
         ),
         Task(
             description=(
                 f"Argue AGAINST the statement: '{topic}'. "
-                "Provide 3–5 analytical counterarguments highlighting flaws, risks, or opposing evidence. "
+                "Provide exactly 4 analytical counterarguments highlighting flaws, risks, or opposing evidence. "
+                "Number each point clearly (1, 2, 3, 4). "
                 "Include real-world reasoning, ethical, or practical challenges. "
-                "Ensure your tone is skeptical, logical, and objective."
+                "Ensure your tone is skeptical, logical, and objective. "
+                "Do not provide more or fewer than 4 points."
             ),
             agent=agent_against,
-            expected_output="3–5 counterpoints challenging the statement with reasoning or data."
+            expected_output="Exactly 4 numbered counterpoints challenging the statement with reasoning and data."
         ),
         Task(
             description=(
-                "Summarize the debate between the FOR and AGAINST agents. "
-                "Compare their strongest arguments, identify common ground or contradictions, "
-                "and produce a balanced conclusion that aids user decision-making. "
-                "Your summary should include a brief recommendation or final stance (if possible)."
+                "Based on the debate between the FOR and AGAINST agents, provide only a final conclusion. "
+                "DO NOT summarize or repeat the individual arguments from either side. "
+                "Instead, provide a balanced final judgment that weighs the overall strength of both positions. "
+                "Give a clear recommendation or stance based on the evidence presented. "
+                "Keep it concise and focused on the conclusion only."
             ),
             agent=summarizer,
-            expected_output="A balanced summary highlighting the main pros and cons, plus a concise conclusion."
+            expected_output="A concise final conclusion and recommendation without repeating the individual arguments."
         )
     ]

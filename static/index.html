@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Debate Arena</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>AI Debate Arena</h1>
+                        <span class="tagline">Where Ideas Clash & Truth Emerges</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section" id="welcomeSection">
+                <div class="welcome-card">
+                    <div class="welcome-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h2>Welcome to the Future of Debate</h2>
+                    <p>Experience multi-agent AI collaboration where different perspectives battle it out to give you the most comprehensive analysis of any topic.</p>
+                    
+                    <div class="features-grid">
+                        <div class="feature">
+                            <i class="fas fa-users"></i>
+                            <span>Multi-Agent System</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-lightning-bolt"></i>
+                            <span>Real-time Analysis</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Evidence-Based</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-start" onclick="showDebateForm()">
+                        <i class="fas fa-rocket"></i>
+                        Start Your First Debate
+                    </button>
+                </div>
+            </section>
+
+            <!-- Input Section -->
+            <section class="input-section" id="inputSection" style="display: none;">
+                <div class="debate-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-lightbulb"></i> Configure Your Debate</h2>
+                        <button class="btn-back" onclick="showWelcome()">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="debateForm" class="debate-form">
+                        <div class="form-group">
+                            <label for="topic">
+                                <i class="fas fa-comment-dots"></i>
+                                What would you like to debate?
+                            </label>
+                            <textarea 
+                                id="topic" 
+                                name="topic" 
+                                placeholder="e.g., 'Should artificial intelligence be regulated by governments?' or 'Is remote work better than office work?'"
+                                required
+                            ></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/500 characters
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-robot"></i>
+                                Choose Your AI Model
+                            </label>
+                            <div class="model-selection" id="modelSelection">
+                                <!-- Models will be loaded dynamically -->
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="startDebateBtn">
+                            <span class="btn-text">
+                                <i class="fas fa-play"></i>
+                                Launch Debate
+                            </span>
+                            <div class="btn-loader" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Initializing...
+                            </div>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-container">
+                    <!-- Header -->
+                    <div class="results-header">
+                        <div class="debate-info">
+                            <h2 id="currentTopic"></h2>
+                            <div class="debate-meta">
+                                <span class="model-badge" id="selectedModel"></span>
+                                <span class="status-badge" id="statusBadge">In Progress</span>
+                            </div>
+                        </div>
+                        <button class="btn-new-debate" onclick="startNewDebate()">
+                            <i class="fas fa-plus"></i>
+                            New Debate
+                        </button>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-steps">
+                            <div class="step active" id="step1">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span>Arguments For</span>
+                            </div>
+                            <div class="step" id="step2">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span>Arguments Against</span>
+                            </div>
+                            <div class="step" id="step3">
+                                <i class="fas fa-balance-scale"></i>
+                                <span>Final Analysis</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div class="status-display" id="statusDisplay">
+                        <div class="status-content">
+                            <div class="status-icon">
+                                <i class="fas fa-cog fa-spin"></i>
+                            </div>
+                            <div class="status-text">
+                                <h3 id="statusTitle">Preparing Debate Arena</h3>
+                                <p id="statusMessage">Setting up AI agents and initializing debate parameters...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Debate Content -->
+                    <div class="debate-results" id="debateResults" style="display: none;">
+                        <!-- Results will be populated here -->
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="export-section" id="exportSection" style="display: none;">
+                        <div class="export-card">
+                            <h3><i class="fas fa-download"></i> Export Results</h3>
+                            <div class="export-buttons">
+                                <button class="btn-export" onclick="exportResults('txt')">
+                                    <i class="fas fa-file-text"></i>
+                                    Text File
+                                </button>
+                                <button class="btn-export" onclick="exportResults('pdf')">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF Report
+                                </button>
+                                <button class="btn-export" onclick="copyToClipboard()">
+                                    <i class="fas fa-copy"></i>
+                                    Copy to Clipboard
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 AI Debate Arena. Powered by CrewAI & Advanced Language Models</p>
+                <div class="footer-links">
+                    <a href="#" onclick="showAbout()">About</a>
+                    <a href="#" onclick="showHelp()">Help</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="aboutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>About AI Debate Arena</h3>
+                <button class="modal-close" onclick="closeModal('aboutModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>AI Debate Arena uses advanced multi-agent systems to provide comprehensive analysis of complex topics. Our AI agents work collaboratively to present balanced perspectives and evidence-based conclusions.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
