@@ -2,18 +2,28 @@
 let currentDebateData = null;
 let selectedModel = null;
 
-// DOM Elements
-const welcomeSection = document.getElementById('welcomeSection');
-const inputSection = document.getElementById('inputSection');
-const resultsSection = document.getElementById('resultsSection');
-const debateForm = document.getElementById('debateForm');
-const topicTextarea = document.getElementById('topic');
-const charCount = document.getElementById('charCount');
-const modelSelection = document.getElementById('modelSelection');
-const startDebateBtn = document.getElementById('startDebateBtn');
+// DOM Elements (will be initialized after DOM loads)
+let welcomeSection;
+let inputSection;
+let resultsSection;
+let debateForm;
+let topicTextarea;
+let charCount;
+let modelSelection;
+let startDebateBtn;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DOM elements
+    welcomeSection = document.getElementById('welcomeSection');
+    inputSection = document.getElementById('inputSection');
+    resultsSection = document.getElementById('resultsSection');
+    debateForm = document.getElementById('debateForm');
+    topicTextarea = document.getElementById('topic');
+    charCount = document.getElementById('charCount');
+    modelSelection = document.getElementById('modelSelection');
+    startDebateBtn = document.getElementById('startDebateBtn');
+    
     loadModels();
     setupEventListeners();
     showWelcome();
@@ -109,8 +119,8 @@ function selectModel(modelId, element) {
     selectedModel = modelId;
 }
 
-// Navigation functions
-function showWelcome() {
+// Navigation functions (exposed to global scope for onclick handlers)
+window.showWelcome = function() {
     hideAllSections();
     if (welcomeSection) {
         welcomeSection.style.display = 'block';
@@ -118,15 +128,20 @@ function showWelcome() {
     }
 }
 
-function showDebateForm() {
+window.showDebateForm = function() {
+    console.log('showDebateForm called');
+    console.log('inputSection:', inputSection);
     hideAllSections();
     if (inputSection) {
         inputSection.style.display = 'block';
         inputSection.classList.add('slide-up');
+        console.log('Input section displayed');
+    } else {
+        console.error('inputSection element not found!');
     }
 }
 
-function showResults() {
+window.showResults = function() {
     hideAllSections();
     if (resultsSection) {
         resultsSection.style.display = 'block';
@@ -723,8 +738,7 @@ function showAbout() {
 }
 
 function showHelp() {
-    // You can implement a help modal similar to about
-    showError('Help documentation coming soon!');
+    showModal('helpModal');
 }
 
 function showModal(modalId) {
@@ -877,3 +891,204 @@ notificationStyles.textContent = `
     }
 `;
 document.head.appendChild(notificationStyles);
+
+// Follow-up functionality
+let debateContext = '';
+let currentModelChoice = null;
+
+// Setup follow-up form listener
+document.addEventListener('DOMContentLoaded', function() {
+    const followupForm = document.getElementById('followupForm');
+    if (followupForm) {
+        followupForm.addEventListener('submit', handleFollowUpQuestion);
+    }
+});
+
+// Handle follow-up question submission
+async function handleFollowUpQuestion(e) {
+    e.preventDefault();
+    
+    const input = document.getElementById('followupInput');
+    const question = input.value.trim();
+    
+    if (!question) return;
+    
+    // Add user message to chat
+    addChatMessage(question, 'user');
+    
+    // Clear input
+    input.value = '';
+    
+    // Show typing indicator
+    const typingId = addTypingIndicator();
+    
+    // Disable send button
+    const sendBtn = document.getElementById('followupBtn');
+    sendBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/followup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                question: question,
+                debate_context: debateContext,
+                model_choice: currentModelChoice
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        // Remove typing indicator
+        removeTypingIndicator(typingId);
+        
+        if (result.status === 'success') {
+            // Add AI response to chat
+            addChatMessage(result.data.answer, 'ai');
+        } else {
+            throw new Error(result.message || 'Unknown error occurred');
+        }
+        
+    } catch (error) {
+        console.error('Follow-up error:', error);
+        removeTypingIndicator(typingId);
+        addChatMessage('Sorry, I encountered an error processing your question. Please try again.', 'ai', true);
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+// Add message to chat
+function addChatMessage(text, sender, isError = false) {
+    const chat = document.getElementById('followupChat');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    
+    const label = sender === 'user' ? 'You' : 'AI Assistant';
+    const icon = sender === 'user' ? 'fa-user' : 'fa-robot';
+    
+    messageDiv.innerHTML = `
+        <div class="message-label">
+            <i class="fas ${icon}"></i>
+            ${label}
+        </div>
+        <div class="chat-bubble ${isError ? 'error' : ''}">
+            ${formatText(text)}
+        </div>
+    `;
+    
+    chat.appendChild(messageDiv);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// Add typing indicator
+function addTypingIndicator() {
+    const chat = document.getElementById('followupChat');
+    const typingDiv = document.createElement('div');
+    const id = 'typing-' + Date.now();
+    typingDiv.id = id;
+    typingDiv.className = 'chat-message ai';
+    typingDiv.innerHTML = `
+        <div class="message-label">
+            <i class="fas fa-robot"></i>
+            AI Assistant
+        </div>
+        <div class="chat-bubble">
+            <div class="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+    `;
+    
+    chat.appendChild(typingDiv);
+    chat.scrollTop = chat.scrollHeight;
+    return id;
+}
+
+// Remove typing indicator
+function removeTypingIndicator(id) {
+    const typingDiv = document.getElementById(id);
+    if (typingDiv) {
+        typingDiv.remove();
+    }
+}
+
+// Update the displayDebateResults function to show follow-up section
+const originalDisplayDebateResults = displayDebateResults;
+displayDebateResults = function(data) {
+    originalDisplayDebateResults(data);
+    
+    // Store debate context for follow-up questions
+    if (data.results) {
+        debateContext = `
+Topic: ${document.getElementById('currentTopic')?.textContent || ''}
+
+Arguments For:
+${data.results.for_arguments || ''}
+
+Arguments Against:
+${data.results.against_arguments || ''}
+
+Conclusion:
+${data.results.summary || ''}
+        `.trim();
+    }
+    
+    // Store current model choice
+    currentModelChoice = selectedModel;
+    
+    // Show follow-up section
+    const followupSection = document.getElementById('followupSection');
+    if (followupSection) {
+        followupSection.style.display = 'block';
+    }
+    
+    // Clear previous chat messages
+    const followupChat = document.getElementById('followupChat');
+    if (followupChat) {
+        followupChat.innerHTML = '<div class="chat-message ai"><div class="message-label"><i class="fas fa-robot"></i> AI Assistant</div><div class="chat-bubble">Feel free to ask me any questions about this debate!</div></div>';
+    }
+};
+
+// Update startNewDebate to clear follow-up section
+const originalStartNewDebate = startNewDebate;
+startNewDebate = function() {
+    originalStartNewDebate();
+    
+    // Clear follow-up data
+    debateContext = '';
+    currentModelChoice = null;
+    
+    // Hide and clear follow-up section
+    const followupSection = document.getElementById('followupSection');
+    if (followupSection) {
+        followupSection.style.display = 'none';
+    }
+    
+    const followupChat = document.getElementById('followupChat');
+    if (followupChat) {
+        followupChat.innerHTML = '';
+    }
+    
+    const followupInput = document.getElementById('followupInput');
+    if (followupInput) {
+        followupInput.value = '';
+    }
+};
+
+
+// Expose all onclick handler functions to global scope
+window.startNewDebate = startNewDebate;
+window.exportResults = exportResults;
+window.copyToClipboard = copyToClipboard;
+window.showAbout = showAbout;
+window.showHelp = showHelp;
+window.closeModal = closeModal;

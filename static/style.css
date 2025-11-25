@@ -1149,3 +1149,289 @@ Side Debate Layout */
         transform: translateY(0);
     }
 }
+
+/* Follo
+w-up Section Styles */
+.followup-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.followup-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.followup-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.followup-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.followup-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.followup-header p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.followup-chat {
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    min-height: 100px;
+}
+
+.chat-message {
+    margin-bottom: 1rem;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.chat-message.user {
+    text-align: right;
+}
+
+.chat-bubble {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.chat-message.user .chat-bubble {
+    background: var(--primary-color);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-message.ai .chat-bubble {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-message .message-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.chat-message.user .message-label {
+    justify-content: flex-end;
+}
+
+.followup-form {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.followup-form input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.followup-form input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.btn-send {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-send:hover {
+    background: var(--primary-dark);
+    transform: scale(1.05);
+}
+
+.btn-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.typing-indicator {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.75rem 1rem;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typingDot 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
+
+/* Scrollbar styling for chat */
+.followup-chat::-webkit-scrollbar {
+    width: 6px;
+}
+
+.followup-chat::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 3px;
+}
+
+.followup-chat::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.followup-chat::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* Responsive adjustments for follow-up */
+@media (max-width: 768px) {
+    .followup-chat {
+        max-height: 300px;
+    }
+    
+    .chat-bubble {
+        max-width: 90%;
+    }
+    
+    .followup-form {
+        padding: 0.75rem 1rem;
+    }
+}
+
+
+/* About Modal Styling */
+.modal-body h4 {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.modal-body h4:first-child {
+    margin-top: 0;
+}
+
+.about-section {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--bg-glass);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.modal-body ul {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.modal-body li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.modal-body strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.modal-body p {
+    margin: 0.75rem 0;
+}
+
+/* Make modal scrollable for longer content */
+.modal-content {
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modal-body {
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+}
+
+/* Scrollbar styling for modal */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}

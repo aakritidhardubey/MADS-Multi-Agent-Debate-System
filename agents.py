@@ -57,3 +57,16 @@ summarizer = Agent(
     ),
     verbose=True
 )
+
+# Follow-up Agent
+followup_agent = Agent(
+    role="Debate Expert & Advisor",
+    goal="Answer follow-up questions about the debate with clarity and depth.",
+    backstory=(
+        "You are an expert analyst who has deep knowledge of the debate that just occurred. "
+        "You can answer specific questions, clarify points, provide additional context, "
+        "compare arguments, or explore specific aspects in more detail. "
+        "You provide concise, informative answers based on the debate context."
+    ),
+    verbose=True
+)

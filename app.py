@@ -10,8 +10,8 @@ from typing import AsyncGenerator
 load_dotenv()
 
 from crewai import Crew
-from tasks import debate_tasks
-from agents import select_model
+from tasks import debate_tasks, create_followup_task
+from agents import select_model, followup_agent
 
 app = FastAPI(title="Debate System API", version="1.0.0")
 
@@ -27,11 +27,21 @@ class DebateResponse(BaseModel):
     message: str
     data: dict = None
 
+class FollowUpRequest(BaseModel):
+    question: str
+    debate_context: str
+    model_choice: str
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main HTML page"""
     with open("static/index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Render"""
+    return {"status": "healthy", "service": "AI Debate Arena"}
 
 @app.get("/api/models")
 async def get_models():
@@ -157,6 +167,55 @@ async def start_debate(request: DebateRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/followup")
+async def ask_followup(request: FollowUpRequest):
+    """Handle follow-up questions about the debate"""
+    try:
+        print(f"Follow-up question: {request.question}")
+        
+        # Model choice mapping
+        model_choice_map = {
+            "1": "Llama 3.1 8B Instant",
+            "3": "Llama 3.3 70B Versatile"
+        }
+        
+        model_name = model_choice_map.get(request.model_choice, "Llama 3.1 8B Instant")
+        
+        # Select model
+        llm = select_model(model_name)
+        
+        # Create follow-up task
+        followup_task = create_followup_task(request.question, request.debate_context, llm)
+        
+        # Create crew with just the follow-up agent
+        crew = Crew(
+            agents=[followup_agent],
+            tasks=[followup_task],
+            verbose=False
+        )
+        
+        # Execute the follow-up task
+        result = crew.kickoff()
+        
+        return DebateResponse(
+            status="success",
+            message="Follow-up answer generated",
+            data={
+                "question": request.question,
+                "answer": str(result)
+            }
+        )
+        
+    except Exception as e:
+        print(f"Error in follow-up: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    # Use 0.0.0.0 for production (Render), 127.0.0.1 for local
+    host = "0.0.0.0" if os.environ.get("RENDER") else "127.0.0.1"
+    uvicorn.run(app, host=host, port=port)

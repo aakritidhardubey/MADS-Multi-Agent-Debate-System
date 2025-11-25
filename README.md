@@ -99,3 +99,142 @@ The agents will debate and the summarizer will provide a **final summary**.
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+
+## 🌐 Web Interface & Deployment
+
+This project now includes a **beautiful web interface** with advanced features!
+
+### ✨ New Web Features
+
+- **🎨 Modern UI**: Beautiful, responsive design with animations
+- **⚖️ Side-by-Side Display**: Compare For/Against arguments easily
+- **💬 Interactive Follow-ups**: Ask unlimited questions about the debate
+- **📄 PDF Export**: Download professional debate reports
+- **📊 Progress Tracking**: Real-time debate generation status
+- **🎯 Structured Output**: Exactly 4 numbered points from each side
+
+### 🚀 Running the Web App Locally
+
+```bash
+# Start the web server
+python app.py
+
+# Or use the quick start script
+python start.py
+```
+
+Then visit: `http://127.0.0.1:8000`
+
+### 🌍 Deploy to Render
+
+**Quick Deploy Steps:**
+
+1. Push your code to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com/)
+3. Click "New +" → "Blueprint"
+4. Connect your GitHub repository
+5. Add environment variable: `GROQ_API_KEY`
+6. Deploy!
+
+**Detailed Instructions**: See [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### 📁 Updated File Structure
+
+```
+├── app.py                 # FastAPI web server
+├── main.py                # CLI version (original)
+├── start.py               # Quick start script
+├── agents.py              # AI agents (For, Against, Judge, Follow-up)
+├── tasks.py               # Debate tasks
+├── static/
+│   ├── index.html         # Web interface
+│   ├── style.css          # Styling
+│   └── script.js          # Frontend logic
+├── requirements.txt       # Python dependencies
+├── render.yaml            # Render deployment config
+├── DEPLOYMENT.md          # Deployment guide
+├── .env                   # Environment variables
+└── README.md              # This file
+```
+
+## 🎯 API Endpoints
+
+- `GET /` - Web interface
+- `GET /health` - Health check
+- `GET /api/models` - Available AI models
+- `POST /api/debate` - Start a debate
+- `POST /api/followup` - Ask follow-up questions
+
+## 🔐 Environment Variables
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+PORT=8000  # Optional, defaults to 8000
+```
+
+## 📱 Screenshots
+
+The web interface features:
+- Welcome screen with feature highlights
+- Debate configuration with model selection
+- Real-time progress indicators
+- Side-by-side argument comparison
+- Interactive follow-up chat
+- Export options (PDF, TXT, Clipboard)
+
+## 🎓 Educational Use
+
+Perfect for:
+- Critical thinking exercises
+- Debate preparation
+- Research analysis
+- Decision-making support
+- Exploring complex topics
+
+## 📊 Tech Stack
+
+**Backend:**
+- FastAPI
+- CrewAI
+- Python 3.12
+- Groq LLMs
+
+**Frontend:**
+- Vanilla JavaScript
+- HTML5/CSS3
+- jsPDF for exports
+
+**Deployment:**
+- Render (recommended)
+- Docker-ready
+- Cloud-native
+
+## 🆘 Troubleshooting
+
+**Issue: API key not found**
+- Ensure `.env` file exists with `GROQ_API_KEY`
+
+**Issue: Port already in use**
+- Change port: `PORT=8001 python app.py`
+
+**Issue: Static files not loading**
+- Ensure `static/` folder exists with all files
+
+**Issue: Slow responses**
+- Try Llama 3.1 8B (faster model)
+- Check your internet connection
+
+## 📄 License
+
+MIT License - Free to use and modify!
+
+## 🙏 Credits
+
+- **CrewAI** - Multi-agent framework
+- **Groq** - Lightning-fast LLM inference
+- **Render** - Easy deployment platform
+
+---
+
+**Ready to deploy?** Check out [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step instructions! 🚀

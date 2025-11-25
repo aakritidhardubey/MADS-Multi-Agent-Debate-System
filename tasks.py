@@ -46,3 +46,21 @@ def debate_tasks(topic,llm):
             expected_output="A concise final conclusion and recommendation without repeating the individual arguments."
         )
     ]
+
+def create_followup_task(question, debate_context, llm):
+    """Create a follow-up task to answer questions about the debate"""
+    from agents import followup_agent
+    
+    followup_agent.llm = llm
+    
+    return Task(
+        description=(
+            f"Based on the following debate context, answer this question: '{question}'\n\n"
+            f"DEBATE CONTEXT:\n{debate_context}\n\n"
+            "Provide a clear, concise answer that directly addresses the question. "
+            "Reference specific arguments from the debate when relevant. "
+            "Keep your response focused and informative."
+        ),
+        agent=followup_agent,
+        expected_output="A clear, concise answer to the user's question based on the debate context."
+    )
