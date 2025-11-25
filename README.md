@@ -140,8 +140,6 @@ ai-debate-arena/
 ├── app.py                 # FastAPI web server
 ├── agents.py              # AI agent definitions (For, Against, Judge, Follow-up)
 ├── tasks.py               # Debate task configurations
-├── main.py                # CLI version (optional)
-├── start.py               # Quick start script
 ├── requirements.txt       # Python dependencies
 ├── pyproject.toml         # Project configuration
 ├── render.yaml            # Render deployment config
