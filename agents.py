@@ -23,10 +23,10 @@ def select_model(choice):
     selected = model_map.get(choice, "groq/llama-3.1-8b-instant") 
     print(f"✅ Using model: {selected}")
     
-    return LLM(model=selected, api_key=groq_api_key)
+    return LLM(model=selected, provider="litellm",api_key=groq_api_key)
 
 # Create default LLM for agent initialization
-default_llm = LLM(model="groq/llama-3.1-8b-instant", api_key=groq_api_key)
+default_llm = LLM(model="groq/llama-3.1-8b-instant",provider="litellm", api_key=groq_api_key)
 
 # Agent For
 agent_for = Agent(
