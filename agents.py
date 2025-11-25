@@ -9,8 +9,11 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 
 if not groq_api_key:
     raise ValueError("❌ GROQ_API_KEY not found. Check your .env file")
-# Model Selection function
 
+# Set GROQ_API_KEY for litellm
+os.environ["GROQ_API_KEY"] = groq_api_key
+
+# Model Selection function
 def select_model(choice):
     model_map = {
         "Llama 3.1 8B Instant": "groq/llama-3.1-8b-instant",
@@ -22,6 +25,9 @@ def select_model(choice):
     
     return LLM(model=selected, api_key=groq_api_key)
 
+# Create default LLM for agent initialization
+default_llm = LLM(model="groq/llama-3.1-8b-instant", api_key=groq_api_key)
+
 # Agent For
 agent_for = Agent(
     role="Debate For",
@@ -31,6 +37,7 @@ agent_for = Agent(
         "to strongly support the given statement. You always provide exactly 4 numbered points, "
         "each with clear justification. You are confident and present structured, factual arguments."
     ),
+    llm=default_llm,
     verbose=True  
 )
 
@@ -43,6 +50,7 @@ agent_against = Agent(
         "You always provide exactly 4 numbered counterarguments, each with solid reasoning. "
         "You question assumptions, highlight risks, and counter with alternative perspectives or evidence."
     ),
+    llm=default_llm,
     verbose=True
 )
 
@@ -55,6 +63,7 @@ summarizer = Agent(
         "You do NOT repeat or summarize individual arguments. Instead, you provide only a final "
         "balanced judgment and clear recommendation based on which side presented stronger evidence overall."
     ),
+    llm=default_llm,
     verbose=True
 )
 
@@ -68,5 +77,6 @@ followup_agent = Agent(
         "compare arguments, or explore specific aspects in more detail. "
         "You provide concise, informative answers based on the debate context."
     ),
+    llm=default_llm,
     verbose=True
 )
