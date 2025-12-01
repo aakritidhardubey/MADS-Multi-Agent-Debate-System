@@ -121,6 +121,10 @@ function selectModel(modelId, element) {
 
 // Navigation functions (exposed to global scope for onclick handlers)
 window.showWelcome = function() {
+    // Re-initialize elements if needed
+    if (!welcomeSection) {
+        welcomeSection = document.getElementById('welcomeSection');
+    }
     hideAllSections();
     if (welcomeSection) {
         welcomeSection.style.display = 'block';
@@ -129,19 +133,24 @@ window.showWelcome = function() {
 }
 
 window.showDebateForm = function() {
-    console.log('showDebateForm called');
-    console.log('inputSection:', inputSection);
+    // Re-initialize elements if needed
+    if (!inputSection) {
+        inputSection = document.getElementById('inputSection');
+    }
     hideAllSections();
     if (inputSection) {
         inputSection.style.display = 'block';
         inputSection.classList.add('slide-up');
-        console.log('Input section displayed');
     } else {
         console.error('inputSection element not found!');
     }
 }
 
 window.showResults = function() {
+    // Re-initialize elements if needed
+    if (!resultsSection) {
+        resultsSection = document.getElementById('resultsSection');
+    }
     hideAllSections();
     if (resultsSection) {
         resultsSection.style.display = 'block';
@@ -150,6 +159,11 @@ window.showResults = function() {
 }
 
 function hideAllSections() {
+    // Re-initialize elements if needed
+    if (!welcomeSection) welcomeSection = document.getElementById('welcomeSection');
+    if (!inputSection) inputSection = document.getElementById('inputSection');
+    if (!resultsSection) resultsSection = document.getElementById('resultsSection');
+    
     [welcomeSection, inputSection, resultsSection].forEach(section => {
         if (section) {
             section.style.display = 'none';
@@ -157,6 +171,52 @@ function hideAllSections() {
         }
     });
 }
+
+function cleanupBeforeDebate() {
+    // Clear debate results
+    const debateResults = document.getElementById('debateResults');
+    if (debateResults) {
+        debateResults.innerHTML = '';
+        debateResults.style.display = 'none';
+    }
+    
+    // Hide and clear visualization
+    const vizContainer = document.getElementById('visualizationContainer');
+    if (vizContainer) {
+        vizContainer.style.display = 'none';
+    }
+    
+    // Hide and clear follow-up section
+    const followupSection = document.getElementById('followupSection');
+    if (followupSection) {
+        followupSection.style.display = 'none';
+    }
+    
+    const followupChat = document.getElementById('followupChat');
+    if (followupChat) {
+        followupChat.innerHTML = '';
+    }
+    
+    // Hide export section
+    const exportSection = document.getElementById('exportSection');
+    if (exportSection) {
+        exportSection.style.display = 'none';
+    }
+    
+    // Reset status display
+    const statusDisplay = document.getElementById('statusDisplay');
+    if (statusDisplay) {
+        statusDisplay.style.display = 'block';
+    }
+    
+    // Clear debate context
+    debateContext = '';
+    currentModelChoice = null;
+    currentDebateData = null;
+    
+    console.log('Cleanup completed before new debate');
+}
+
 
 // Handle debate form submission
 async function handleDebateSubmission(e) {
@@ -175,16 +235,91 @@ async function handleDebateSubmission(e) {
         return;
     }
     
-    // Show loading state
-    setButtonLoading(true);
+    cleanupBeforeDebate();
     
-    try {
-        await startDebate(topic, modelChoice);
-    } catch (error) {
-        console.error('Debate error:', error);
-        showError('Failed to start debate. Please try again.');
-        setButtonLoading(false);
+    // Check if live mode is enabled
+    const liveModeToggle = document.getElementById('liveModeToggle');
+    const isLiveMode = liveModeToggle && liveModeToggle.checked;
+    
+    if (isLiveMode && window.liveDebate) {
+        // Use live debate mode
+        showResults();
+        setButtonLoading(true);
+        try {
+            await window.liveDebate.startLiveDebate(topic, modelChoice);
+            
+            // ✅ FIX: Setup follow-up after live debate completes
+            setupFollowUpAfterLiveDebate(topic, modelChoice);
+            
+            // Also trigger visualization
+            if (window.debateViz) {
+                setTimeout(() => window.debateViz.manualTrigger(), 1500);
+            }
+            
+        } catch (error) {
+            console.error('Live debate error:', error);
+            showError('Live debate failed. Please try again.');
+        } finally {
+            setButtonLoading(false);
+        }
+    } else {
+        // Use normal debate mode
+        setButtonLoading(true);
+        try {
+            await startDebate(topic, modelChoice);
+        } catch (error) {
+            console.error('Debate error:', error);
+            showError('Failed to start debate. Please try again.');
+            setButtonLoading(false);
+        }
     }
+}
+
+// Add this function to capture debate context after live debate completes
+function setupFollowUpAfterLiveDebate(topic, modelChoice) {
+    // Wait a bit for the DOM to be populated with debate results
+    setTimeout(() => {
+        const forContent = document.querySelector('.for-column .argument-content')?.textContent || '';
+        const againstContent = document.querySelector('.against-column .argument-content')?.textContent || '';
+        const summaryContent = document.querySelector('.summary-content')?.textContent || '';
+        
+        if (forContent && againstContent) {
+            // Set the debate context for follow-up questions
+            debateContext = `
+Topic: ${topic}
+
+Arguments For:
+${forContent}
+
+Arguments Against:
+${againstContent}
+
+Conclusion:
+${summaryContent}
+            `.trim();
+            
+            // Set current model choice
+            currentModelChoice = modelChoice;
+            
+            // Show follow-up section
+            const followupSection = document.getElementById('followupSection');
+            if (followupSection) {
+                followupSection.style.display = 'block';
+            }
+            
+            // Clear and add welcome message to chat
+            const followupChat = document.getElementById('followupChat');
+            if (followupChat) {
+                followupChat.innerHTML = '<div class="chat-message ai"><div class="message-label"><i class="fas fa-robot"></i> AI Assistant</div><div class="chat-bubble">Feel free to ask me any questions about this debate!</div></div>';
+            }
+            
+            console.log('Follow-up system initialized for live debate');
+        } else {
+            // Retry if content not found yet
+            console.log('Debate content not found, retrying...');
+            setTimeout(() => setupFollowUpAfterLiveDebate(topic, modelChoice), 1000);
+        }
+    }, 1000);
 }
 
 // Start debate
@@ -365,6 +500,37 @@ function displayDebateResults(data) {
     // Store current debate data
     currentDebateData = data;
     
+    // Store debate context for follow-up questions
+    if (data.results) {
+        debateContext = `
+Topic: ${document.getElementById('currentTopic')?.textContent || ''}
+
+Arguments For:
+${data.results.for_arguments || ''}
+
+Arguments Against:
+${data.results.against_arguments || ''}
+
+Conclusion:
+${data.results.summary || ''}
+        `.trim();
+    }
+    
+    // Store current model choice
+    currentModelChoice = selectedModel;
+    
+    // Show follow-up section
+    const followupSection = document.getElementById('followupSection');
+    if (followupSection) {
+        followupSection.style.display = 'block';
+    }
+    
+    // Clear previous chat messages and add welcome message
+    const followupChat = document.getElementById('followupChat');
+    if (followupChat) {
+        followupChat.innerHTML = '<div class="chat-message ai"><div class="message-label"><i class="fas fa-robot"></i> AI Assistant</div><div class="chat-bubble">Feel free to ask me any questions about this debate!</div></div>';
+    }
+    
     // Complete all progress steps
     updateProgress(3);
     
@@ -502,6 +668,34 @@ function startNewDebate() {
     selectedModel = null;
     currentDebateData = null;
     
+    // Clear follow-up data
+    debateContext = '';
+    currentModelChoice = null;
+    
+    // Hide follow-up section
+    const followupSection = document.getElementById('followupSection');
+    if (followupSection) {
+        followupSection.style.display = 'none';
+    }
+    
+    // Clear chat
+    const followupChat = document.getElementById('followupChat');
+    if (followupChat) {
+        followupChat.innerHTML = '';
+    }
+    
+    // Hide visualization section
+    const vizContainer = document.getElementById('visualizationContainer');
+    if (vizContainer) {
+        vizContainer.style.display = 'none';
+    }
+    
+    // Hide export section
+    const exportSection = document.getElementById('exportSection');
+    if (exportSection) {
+        exportSection.style.display = 'none';
+    }
+    
     // Reset character count
     if (charCount) {
         charCount.textContent = '0';
@@ -514,23 +708,37 @@ function startNewDebate() {
 
 // Export functions
 function exportResults(format) {
-    if (!currentDebateData) {
-        showError('No debate results to export.');
+    // Check both window and local scope
+    const debateData = window.currentDebateData || currentDebateData;
+    
+    if (!debateData) {
+        showError('No debate results to export. Please complete a debate first.');
+        console.error('currentDebateData is null');
         return;
     }
     
     const filename = `debate-results-${Date.now()}`;
     
-    if (format === 'txt') {
-        const content = formatExportContent();
-        downloadTextFile(content, filename + '.txt');
-    } else if (format === 'pdf') {
-        generatePDF(filename + '.pdf');
+    try {
+        if (format === 'txt') {
+            const content = formatExportContent();
+            downloadTextFile(content, filename + '.txt');
+        } else if (format === 'pdf') {
+            generatePDF(filename + '.pdf');
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        showError('Failed to export: ' + error.message);
     }
 }
 
 function formatExportContent() {
-    if (!currentDebateData) return '';
+    const debateData = window.currentDebateData || currentDebateData;
+    
+    if (!debateData) {
+        console.error('No debate data available for export');
+        return '';
+    }
     
     const topic = document.getElementById('currentTopic')?.textContent || 'Unknown Topic';
     const model = document.getElementById('selectedModel')?.textContent || 'Unknown Model';
@@ -547,19 +755,19 @@ Generated: ${timestamp}
 `;
 
     // Handle new structured format
-    if (currentDebateData.results) {
+    if (debateData.results) {
         content += `
 ARGUMENTS FOR:
-${currentDebateData.results.for_arguments || 'Not available'}
+${debateData.results.for_arguments || 'Not available'}
 
 ARGUMENTS AGAINST:
-${currentDebateData.results.against_arguments || 'Not available'}
+${debateData.results.against_arguments || 'Not available'}
 
 CONCLUSION & ANALYSIS:
-${currentDebateData.results.summary || 'Not available'}
+${debateData.results.summary || 'Not available'}
 `;
-    } else if (currentDebateData.result) {
-        content += currentDebateData.result;
+    } else if (debateData.result) {
+        content += debateData.result;
     }
     
     content += `
@@ -642,8 +850,11 @@ function generatePDF(filename) {
         yPosition = addWrappedText(`Generated: ${timestamp}`, margin, yPosition, maxWidth, 10);
         yPosition += 15;
         
+        // Get debate data from window or local scope
+        const debateData = window.currentDebateData || currentDebateData;
+        
         // Check if we have structured results
-        if (currentDebateData.results) {
+        if (debateData && debateData.results) {
             // Arguments For section
             doc.setFillColor(16, 185, 129);
             doc.rect(margin, yPosition - 5, maxWidth, 8, 'F');
@@ -652,7 +863,7 @@ function generatePDF(filename) {
             doc.setTextColor(0, 0, 0);
             yPosition += 10;
             
-            const forText = cleanText(currentDebateData.results.for_arguments || 'Not available');
+            const forText = cleanText(debateData.results.for_arguments || 'Not available');
             yPosition = addWrappedText(forText, margin, yPosition, maxWidth, 10);
             yPosition += 15;
             
@@ -670,7 +881,7 @@ function generatePDF(filename) {
             doc.setTextColor(0, 0, 0);
             yPosition += 10;
             
-            const againstText = cleanText(currentDebateData.results.against_arguments || 'Not available');
+            const againstText = cleanText(debateData.results.against_arguments || 'Not available');
             yPosition = addWrappedText(againstText, margin, yPosition, maxWidth, 10);
             yPosition += 15;
             
@@ -688,12 +899,12 @@ function generatePDF(filename) {
             doc.setTextColor(0, 0, 0);
             yPosition += 10;
             
-            const summaryText = cleanText(currentDebateData.results.summary || 'Not available');
+            const summaryText = cleanText(debateData.results.summary || 'Not available');
             yPosition = addWrappedText(summaryText, margin, yPosition, maxWidth, 10);
             
-        } else if (currentDebateData.result) {
+        } else if (debateData && debateData.result) {
             // Fallback for old format
-            const resultText = cleanText(currentDebateData.result);
+            const resultText = cleanText(debateData.result);
             yPosition = addWrappedText(resultText, margin, yPosition, maxWidth, 10);
         }
         
@@ -1021,68 +1232,7 @@ function removeTypingIndicator(id) {
     }
 }
 
-// Update the displayDebateResults function to show follow-up section
-const originalDisplayDebateResults = displayDebateResults;
-displayDebateResults = function(data) {
-    originalDisplayDebateResults(data);
-    
-    // Store debate context for follow-up questions
-    if (data.results) {
-        debateContext = `
-Topic: ${document.getElementById('currentTopic')?.textContent || ''}
 
-Arguments For:
-${data.results.for_arguments || ''}
-
-Arguments Against:
-${data.results.against_arguments || ''}
-
-Conclusion:
-${data.results.summary || ''}
-        `.trim();
-    }
-    
-    // Store current model choice
-    currentModelChoice = selectedModel;
-    
-    // Show follow-up section
-    const followupSection = document.getElementById('followupSection');
-    if (followupSection) {
-        followupSection.style.display = 'block';
-    }
-    
-    // Clear previous chat messages
-    const followupChat = document.getElementById('followupChat');
-    if (followupChat) {
-        followupChat.innerHTML = '<div class="chat-message ai"><div class="message-label"><i class="fas fa-robot"></i> AI Assistant</div><div class="chat-bubble">Feel free to ask me any questions about this debate!</div></div>';
-    }
-};
-
-// Update startNewDebate to clear follow-up section
-const originalStartNewDebate = startNewDebate;
-startNewDebate = function() {
-    originalStartNewDebate();
-    
-    // Clear follow-up data
-    debateContext = '';
-    currentModelChoice = null;
-    
-    // Hide and clear follow-up section
-    const followupSection = document.getElementById('followupSection');
-    if (followupSection) {
-        followupSection.style.display = 'none';
-    }
-    
-    const followupChat = document.getElementById('followupChat');
-    if (followupChat) {
-        followupChat.innerHTML = '';
-    }
-    
-    const followupInput = document.getElementById('followupInput');
-    if (followupInput) {
-        followupInput.value = '';
-    }
-};
 
 
 // Expose all onclick handler functions to global scope

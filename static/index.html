@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -8,6 +8,10 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/speech.css">
+    <link rel="stylesheet" href="/static/visualization.css">
+    <link rel="stylesheet" href="/static/multilang.css">
+    <link rel="stylesheet" href="/static/livedebate.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -32,6 +36,9 @@
                         <h1>AI Debate Arena</h1>
                         <span class="tagline">Where Ideas Clash & Truth Emerges</span>
                     </div>
+                </div>
+                <div class="header-controls" id="headerControls">
+                    <!-- Language selector and speech button will be added here by JS -->
                 </div>
             </div>
         </header>
@@ -167,10 +174,10 @@
                 <h4>🚀 Getting Started</h4>
                 <div class="about-section">
                     <p><strong>Step 1:</strong> Click "Start Your First Debate" on the welcome screen</p>
-                    <p><strong>Step 2:</strong> Enter your debate topic or question (e.g., "Should remote work be
-                        mandatory?")</p>
-                    <p><strong>Step 3:</strong> Choose an AI model based on your needs</p>
-                    <p><strong>Step 4:</strong> Click "Launch Debate" and wait for the analysis</p>
+                    <p><strong>Step 2:</strong> (Optional) Toggle "Live Debate Mode" ON to watch real-time streaming</p>
+                    <p><strong>Step 3:</strong> Enter your debate topic or use voice input (microphone button)</p>
+                    <p><strong>Step 4:</strong> Choose an AI model based on your needs</p>
+                    <p><strong>Step 5:</strong> Click "Launch Debate" and watch the analysis</p>
                 </div>
 
                 <h4>🤖 Choosing the Right Model</h4>
@@ -183,6 +190,21 @@
                     </ul>
                 </div>
 
+                <h4>🎥 Live Debate Mode</h4>
+                <div class="about-section">
+                    <p><strong>What it does:</strong> Watch AI agents debate in real-time with typing animations</p>
+                    <p><strong>How to use:</strong> Toggle "Live Debate Mode" ON before starting your debate</p>
+                    <p><strong>Features:</strong> Live timer, status updates, character-by-character text streaming</p>
+                    <p><strong>Stop button:</strong> Click "Stop" anytime to see complete results immediately</p>
+                </div>
+
+                <h4>🎙️ Voice Features</h4>
+                <div class="about-section">
+                    <p><strong>Speech-to-Text:</strong> Click microphone button to dictate your topic or questions</p>
+                    <p><strong>Text-to-Speech:</strong> Click speaker icons to hear arguments read aloud</p>
+                    <p><strong>Speed Control:</strong> Click sliders icon (⚙️) to adjust speech speed and pitch</p>
+                </div>
+
                 <h4>💡 Tips for Best Results</h4>
                 <div class="about-section">
                     <ul>
@@ -190,9 +212,17 @@
                         <li><strong>Frame as Questions:</strong> "Should X?" or "Is Y better than Z?" work well</li>
                         <li><strong>Avoid Vague Topics:</strong> Instead of "Technology", try "Should AI replace human
                             customer service?"</li>
-                        <li><strong>Use Follow-ups:</strong> Ask clarifying questions to explore specific points deeper
-                        </li>
+                        <li><strong>Use Live Mode:</strong> More engaging experience with real-time streaming</li>
+                        <li><strong>Use Follow-ups:</strong> Ask clarifying questions to explore specific points deeper</li>
+                        <li><strong>Check Analytics:</strong> View visualizations to understand argument strength</li>
                     </ul>
+                </div>
+
+                <h4>📊 Understanding Analytics</h4>
+                <div class="about-section">
+                    <p><strong>Argument Strength:</strong> Shows which side won based on judge's verdict</p>
+                    <p><strong>Key Topics:</strong> Color-coded word cloud (green=FOR, red=AGAINST, blue=both)</p>
+                    <p><strong>Side Comparison:</strong> Multi-dimensional radar chart comparing both sides</p>
                 </div>
 
                 <h4>💬 Using Follow-up Questions</h4>
@@ -204,6 +234,7 @@
                         <li>"What are the real-world implications?"</li>
                         <li>"Are there any compromises between both positions?"</li>
                     </ul>
+                    <p><strong>Tip:</strong> Use voice input (microphone button) for hands-free questions!</p>
                 </div>
 
                 <h4>📄 Exporting Results</h4>
@@ -212,6 +243,11 @@
                     </p>
                     <p><strong>Text File:</strong> Plain text version for easy sharing</p>
                     <p><strong>Copy to Clipboard:</strong> Quick copy for pasting into documents or emails</p>
+                </div>
+
+                <h4>🌍 Multi-Language Support</h4>
+                <div class="about-section">
+                    <p>Click the language selector to choose from 10+ languages. Speech recognition will automatically adapt to your selected language.</p>
                 </div>
 
                 <h4>❓ Frequently Asked Questions</h4>
@@ -273,9 +309,13 @@
                             evidence and examples</li>
                         <li><strong>Agent Against:</strong> Provides 4 analytical counterarguments highlighting
                             potential flaws and risks</li>
-                        <li><strong>Final Judge:</strong> Delivers a balanced conclusion based on the strength of both
-                            perspectives</li>
+                        <li><strong>Final Judge:</strong> Delivers a clear verdict declaring which side wins with detailed reasoning</li>
                     </ul>
+                </div>
+
+                <div class="about-section">
+                    <p><strong>🎥 Live Debate Mode:</strong></p>
+                    <p>Watch AI agents debate in real-time with typing animations! Toggle Live Mode to see arguments unfold character-by-character with live status updates and timer.</p>
                 </div>
 
                 <div class="about-section">
@@ -286,11 +326,19 @@
                 </div>
 
                 <div class="about-section">
+                    <p><strong>📊 Real-time Analytics:</strong></p>
+                    <p>Automatic visualization of debate results with interactive charts showing argument strength based on judge's verdict, color-coded word clouds, and multi-dimensional comparisons.</p>
+                </div>
+
+                <div class="about-section">
                     <p><strong>🎯 Key Features:</strong></p>
                     <ul>
-                        <li>Structured debate with exactly 4 points per side</li>
-                        <li>Evidence-based reasoning and real-world examples</li>
-                        <li>Interactive Q&A with context-aware responses</li>
+                        <li>Live streaming debate mode with typing animations</li>
+                        <li>Clear winner declaration in every debate</li>
+                        <li>Speech-to-text input (voice dictation)</li>
+                        <li>Text-to-speech output (read aloud) with adjustable speed</li>
+                        <li>Multi-language support (10+ languages)</li>
+                        <li>Interactive visualizations and analytics</li>
                         <li>Export results as PDF or text files</li>
                         <li>Multiple AI models to choose from</li>
                     </ul>
@@ -305,6 +353,10 @@
         </div>
     </div>
     <script src="/static/script.js"></script>
+    <script src="/static/speech.js"></script>
+    <script src="/static/visualization.js"></script>
+    <script src="/static/multilang.js"></script>
+    <script src="/static/livedebate.js"></script>
 </body>
 
 </html>
