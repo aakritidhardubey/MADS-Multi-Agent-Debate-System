@@ -227,19 +227,20 @@
 @media (max-width: 768px) {
     .language-selector {
         margin-left: 0;
-        margin-top: 1rem;
-        width: 100%;
+        width: auto;
+        flex-shrink: 0;
     }
     
     .lang-btn {
-        width: 100%;
-        justify-content: center;
+        padding: 0.5rem 1rem;
+        min-width: auto;
     }
     
     .lang-menu {
         right: 0;
-        left: 0;
-        min-width: auto;
+        left: auto;
+        min-width: 250px;
+        transform: translateX(0);
     }
     
     .current-lang-name {

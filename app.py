@@ -5,9 +5,14 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import asyncio
 import json
+import os
 from typing import AsyncGenerator
 
 load_dotenv()
+
+# Check for required environment variables
+if not os.getenv("GROQ_API_KEY"):
+    raise ValueError("❌ GROQ_API_KEY environment variable is required")
 
 from crewai import Crew
 from tasks import debate_tasks, create_followup_task
