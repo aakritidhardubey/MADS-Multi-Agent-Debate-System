@@ -9,12 +9,15 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 72
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False)
 bearer_scheme = HTTPBearer(auto_error=False)
 
 def _truncate(password: str) -> str:
-    """bcrypt silently truncates at 72 bytes — we do it explicitly to avoid the error."""
-    return password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+    """Safely truncate to 72 bytes without splitting a multi-byte character."""
+    encoded = password.encode("utf-8")
+    if len(encoded) <= 72:
+        return password
+    return encoded[:72].decode("utf-8", errors="ignore")
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(_truncate(password))
