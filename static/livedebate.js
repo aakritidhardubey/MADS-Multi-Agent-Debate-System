@@ -149,7 +149,7 @@ class LiveDebateMode {
         `;
         
         // Insert at the beginning of results section
-        const resultsContainer = resultsSection.querySelector('.results-container');
+        const resultsContainer = resultsSection.querySelector('.res');
         if (resultsContainer) {
             resultsContainer.insertBefore(liveContainer, resultsContainer.firstChild);
         }
@@ -187,6 +187,10 @@ class LiveDebateMode {
         if (debateResults) debateResults.style.display = 'none';
         if (statusDisplay) statusDisplay.style.display = 'none';
         if (liveContainer) liveContainer.style.display = 'block';
+
+        // Restore progress bar in case it was hidden by a history view
+        const progBar = document.querySelector('#resultsSection .prog');
+        if (progBar) progBar.style.display = '';
         
         // Reset UI
         this.resetLiveUI();
@@ -224,7 +228,11 @@ class LiveDebateMode {
                     },
                     body: JSON.stringify({
                         topic: topic,
-                        model_choice: modelChoice
+                        model_choice: modelChoice,
+                        depth: (window.debateConfig && window.debateConfig.depth) || 'standard',
+                        args_per_side: (window.debateConfig && window.debateConfig.args) || 4,
+                        tone: (window.debateConfig && window.debateConfig.tone) || 'balanced',
+                        focus: (window.debateConfig && window.debateConfig.focus) || 'general'
                     })
                 });
                 

@@ -1,363 +1,634 @@
-﻿﻿<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Debate Arena - Multi-Agent Debate System</title>
-    <base href="./">
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
-    <link rel="stylesheet" href="static/style.css">
-    <link rel="stylesheet" href="static/speech.css">
-    <link rel="stylesheet" href="static/visualization.css">
-    <link rel="stylesheet" href="static/multilang.css">
-    <link rel="stylesheet" href="static/livedebate.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Debate Arena</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="static/speech.css">
+<link rel="stylesheet" href="static/visualization.css">
+<link rel="stylesheet" href="static/multilang.css">
+<link rel="stylesheet" href="static/livedebate.css">
+<style>
+/* ── reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --a:#7c6dfa;--a2:#4facfe;
+  --bg:#08080f;--bg2:#0d0d1a;--bg3:#111120;
+  --bd:rgba(255,255,255,.07);
+  --t:#eeeeff;--dm:rgba(255,255,255,.38);
+  --fd:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
+  --nh:58px;
+}
+html,body{font-family:var(--fb);background:var(--bg);color:var(--t);min-height:100vh;overflow-x:hidden}
+
+/* ── background blobs ── */
+.blobs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:.06}
+.b1{width:600px;height:600px;background:#7c6dfa;top:-160px;left:-120px;animation:drift 18s ease-in-out infinite}
+.b2{width:450px;height:450px;background:#4facfe;bottom:-100px;right:-80px;animation:drift 22s ease-in-out infinite 4s reverse}
+.b3{width:280px;height:280px;background:#f093fb;top:50%;left:52%;animation:drift 14s ease-in-out infinite 8s}
+@keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(18px,-18px)}}
+
+/* ── navbar ── */
+.navbar{
+  position:sticky;top:0;z-index:100;
+  height:var(--nh);display:flex;align-items:center;gap:12px;padding:0 22px;
+  background:rgba(8,8,15,.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);
+}
+.nav-logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
+.nav-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--a),var(--a2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.nav-title{font-family:var(--fd);font-size:15px;font-weight:800;background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-sep{width:1px;height:22px;background:var(--bd);flex-shrink:0}
+#headerControls{display:flex;align-items:center;gap:6px;flex:1}
+.nav-end{margin-left:auto;display:flex;align-items:center;gap:7px}
+.nbt{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--t);font-size:11px;font-weight:500;cursor:pointer;font-family:var(--fb);transition:all .15s;white-space:nowrap}
+.nbt:hover{background:rgba(124,109,250,.16);border-color:rgba(124,109,250,.36)}
+.nbt.red{color:#fca5a5;border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.06)}
+.nbt.red:hover{background:rgba(239,68,68,.15)}
+.uc{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 4px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:16px}
+.uav{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff}
+.unm{font-size:11px;font-weight:500}
+
+/* ── SECTIONS — script.js uses display:none / display:block ── */
+/* All three sections live in normal document flow.             */
+/* script.js's hideAllSections() sets display:none on all,     */
+/* then sets display:block on the active one. We just need      */
+/* each section to fill the viewport when shown.                */
+
+.section{min-height:calc(100vh - var(--nh));position:relative;z-index:1}
+
+/* welcome: centred content */
+#welcomeSection{display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.w-inner{max-width:500px;width:100%;text-align:center}
+.w-emblem{width:82px;height:82px;margin:0 auto 26px;background:linear-gradient(135deg,rgba(124,109,250,.14),rgba(79,172,254,.14));border:1px solid rgba(124,109,250,.24);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:34px;animation:bob 5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.w-inner h1{font-family:var(--fd);font-size:34px;font-weight:800;line-height:1.2;margin-bottom:13px}
+.w-inner h1 span{background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.w-inner p{font-size:14px;color:var(--dm);line-height:1.7;margin-bottom:28px}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:30px}
+.feat{background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:11px;padding:13px 8px;font-size:10px;color:var(--dm);transition:all .18s}
+.feat:hover{border-color:rgba(124,109,250,.26);color:var(--t)}
+.feat i{font-size:17px;margin-bottom:6px;display:block;color:var(--a)}
+.cta{display:inline-flex;align-items:center;gap:10px;padding:14px 42px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;border-radius:13px;color:#fff;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 5px 20px rgba(124,109,250,.36)}
+.cta:hover{transform:translateY(-2px);box-shadow:0 9px 28px rgba(124,109,250,.5)}
+
+/* config page */
+#inputSection{display:none;align-items:flex-start;justify-content:center;padding:30px 20px 60px}
+.cfg{width:100%;max-width:640px;background:var(--bg2);border:1px solid var(--bd);border-radius:18px;overflow:hidden;box-shadow:0 16px 44px rgba(0,0,0,.4)}
+.cfg-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--bd)}
+.cfg-hd h2{font-family:var(--fd);font-size:18px;font-weight:800}
+.back{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1px solid var(--bd);background:rgba(255,255,255,.04);color:var(--dm);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .14s}
+.back:hover{background:rgba(255,255,255,.08);color:var(--t)}
+.cfg-bd{padding:22px}
+.cfg-ft{padding:0 22px 22px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);display:flex;align-items:center;gap:5px;margin-bottom:8px}
+.topic-ta{width:100%;min-height:90px;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:10px;color:var(--t);font-family:var(--fb);font-size:13px;line-height:1.6;padding:11px 13px;resize:vertical;outline:none;transition:border-color .15s}
+.topic-ta::placeholder{color:rgba(255,255,255,.16)}
+.topic-ta:focus{border-color:rgba(124,109,250,.5)}
+.char-row{display:flex;justify-content:space-between;margin:4px 0 18px;font-size:10px;color:var(--dm)}
+
+/* model options — script.js creates .model-option elements */
+#modelSelection{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.model-option{display:flex;align-items:center;gap:11px;padding:11px 14px;border-radius:10px;border:1px solid var(--bd);background:rgba(255,255,255,.02);cursor:pointer;transition:all .14s}
+.model-option:hover{border-color:rgba(124,109,250,.28);background:rgba(124,109,250,.05)}
+.model-option.selected{border-color:var(--a);background:rgba(124,109,250,.1)}
+.model-option input[type=radio]{display:none}
+.model-option .model-info h4{font-size:12px;font-weight:600;margin-bottom:1px}
+.model-option .model-info p{font-size:10px;color:var(--dm)}
+
+.divider{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dm);margin:4px 0 16px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+/* dropdowns */
+.dd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.dd-row{display:flex;flex-direction:column;gap:6px}
+.dd-lbl{font-size:11px;font-weight:500;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:4px}
+select.dd{width:100%;padding:9px 11px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:9px;color:var(--t);font-family:var(--fb);font-size:12px;outline:none;cursor:pointer;transition:border-color .14s;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='rgba(255,255,255,0.35)' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+select.dd:focus{border-color:rgba(124,109,250,.5)}
+select.dd option{background:var(--bg3);color:var(--t)}
+
+/* chips */
+.chip-row{margin-bottom:14px}
+.chip-lbl{font-size:11px;font-weight:500;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:4px;margin-bottom:7px}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:4px 11px;border-radius:14px;font-size:11px;font-weight:600;border:1px solid var(--bd);background:rgba(255,255,255,.03);color:var(--dm);cursor:pointer;transition:all .14s}
+.chip:hover{border-color:rgba(124,109,250,.32);color:var(--t)}
+.chip.on{background:rgba(124,109,250,.16);border-color:var(--a);color:var(--t)}
+
+/* live toggle */
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.tog-lbl{font-size:11px;font-weight:500;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:5px}
+.tog{position:relative;width:34px;height:18px;display:inline-block;cursor:pointer}
+.tog input{opacity:0;width:0;height:0}
+.tog-tr{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:9px;transition:.2s}
+.tog input:checked+.tog-tr{background:var(--a)}
+.tog-th{position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s}
+.tog input:checked~.tog-th{transform:translateX(16px)}
+
+/* launch button */
+.launch{width:100%;padding:13px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;border-radius:11px;color:#fff;font-family:var(--fd);font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(124,109,250,.3)}
+.launch:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,109,250,.46)}
+.launch:active{transform:none}
+.launch:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-text{display:flex;align-items:center;gap:7px}
+.btn-loader{display:none;align-items:center;gap:7px}
+.cfg-err{display:none;margin-bottom:11px;padding:9px 13px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.26);border-radius:8px;color:#fca5a5;font-size:11px}
+
+/* results page */
+#resultsSection{display:none;padding:24px 20px 60px}
+.res{max-width:1060px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.res-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.res-hd h2{font-family:var(--fd);font-size:20px;font-weight:700;line-height:1.3;margin-bottom:7px}
+.res-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;text-transform:uppercase;letter-spacing:.05em}
+.bm{background:rgba(79,172,254,.12);color:#93c5fd;border:1px solid rgba(79,172,254,.2)}
+.bs{background:rgba(124,109,250,.12);color:#c4b5fd;border:1px solid rgba(124,109,250,.2)}
+.bs.completed{background:rgba(16,185,129,.12);color:#6ee7b7;border-color:rgba(16,185,129,.2)}
+.new-btn{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--bd);color:var(--t);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .14s;white-space:nowrap;flex-shrink:0}
+.new-btn:hover{background:rgba(124,109,250,.12);border-color:rgba(124,109,250,.35)}
+
+/* progress */
+.prog{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:11px;padding:13px 17px}
+.prog-tr{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:11px;overflow:hidden}
+.progress-fill{height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .5s}
+.progress-steps{display:flex;justify-content:space-between;gap:6px}
+.step{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;color:var(--dm);transition:color .2s}
+.step.active{color:var(--a)}.step.completed{color:#6ee7b7}
+
+/* status */
+.status-display{background:rgba(124,109,250,.05);border:1px solid rgba(124,109,250,.13);border-radius:11px;padding:20px;display:flex;align-items:center;gap:13px}
+.status-icon{font-size:24px;color:var(--a);flex-shrink:0}
+.status-text h3{font-family:var(--fd);font-size:14px;font-weight:700;margin-bottom:3px}
+.status-text p{font-size:11px;color:var(--dm)}
+
+/* error */
+#errorMessage{display:none;align-items:center;gap:7px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.26);border-radius:10px;padding:10px 14px;color:#fca5a5;font-size:11px}
+#errorMessage.show{display:flex}
+
+/* debate result columns (script.js injects .debate-layout HTML) */
+#debateResults{display:none}
+#debateResults .debate-layout{display:flex;flex-direction:column;gap:13px}
+#debateResults .arguments-container{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+#debateResults .argument-column{background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+#debateResults .for-column{border-top:2px solid #10b981}
+#debateResults .against-column{border-top:2px solid #ef4444}
+#debateResults .argument-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bd)}
+#debateResults .for-header{background:rgba(16,185,129,.05)}
+#debateResults .against-header{background:rgba(239,68,68,.05)}
+#debateResults .argument-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+#debateResults .for-header .argument-icon{background:rgba(16,185,129,.13);color:#6ee7b7}
+#debateResults .against-header .argument-icon{background:rgba(239,68,68,.13);color:#fca5a5}
+#debateResults .argument-header h3{font-family:var(--fd);font-size:13px;font-weight:700}
+#debateResults .argument-content{padding:16px;font-size:13px;line-height:1.8;color:rgba(255,255,255,.8)}
+#debateResults .summary-section{background:rgba(124,109,250,.04);border:1px solid rgba(124,109,250,.17);border-radius:12px;overflow:hidden;border-top:2px solid var(--a)}
+#debateResults .summary-header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(124,109,250,.13);background:rgba(124,109,250,.07)}
+#debateResults .summary-icon{width:28px;height:28px;border-radius:7px;background:rgba(124,109,250,.18);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-size:12px}
+#debateResults .summary-header h3{font-family:var(--fd);font-size:13px;font-weight:700}
+#debateResults .summary-content{padding:16px;font-size:13px;line-height:1.8;color:rgba(255,255,255,.82)}
+
+/* follow-up */
+#followupSection{display:none}
+.fup{background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.fup-hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bd);background:rgba(255,255,255,.02)}
+.fup-ic{width:28px;height:28px;border-radius:7px;background:rgba(124,109,250,.14);color:#c4b5fd;display:flex;align-items:center;justify-content:center;font-size:12px}
+.fup-hd h3{font-family:var(--fd);font-size:13px;font-weight:700;margin-bottom:1px}
+.fup-hd p{font-size:10px;color:var(--dm)}
+.followup-chat{max-height:260px;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:9px}
+.followup-form{display:flex;gap:7px;padding:10px 12px;border-top:1px solid var(--bd)}
+.followup-form input{flex:1;padding:8px 11px;background:rgba(255,255,255,.04);border:1px solid var(--bd);border-radius:8px;color:var(--t);font-size:12px;font-family:var(--fb);outline:none;transition:border-color .14s}
+.followup-form input:focus{border-color:rgba(124,109,250,.44)}
+.btn-send{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;color:#fff;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* export */
+#exportSection{display:none}
+.exp{background:rgba(255,255,255,.02);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.exp h3{font-family:var(--fd);font-size:13px;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:6px}
+.exp-btns{display:flex;gap:7px;flex-wrap:wrap}
+.btn-export{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--bd);color:var(--t);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .14s}
+.btn-export:hover{background:rgba(124,109,250,.12);border-color:rgba(124,109,250,.35)}
+
+/* chat bubbles */
+.chat-message{display:flex;flex-direction:column;gap:3px}
+.chat-message.user{align-items:flex-end}
+.chat-message.ai{align-items:flex-start}
+.message-label{font-size:9px;font-weight:700;color:var(--dm);text-transform:uppercase;letter-spacing:.06em;padding:0 3px}
+.chat-bubble{padding:8px 12px;border-radius:11px;font-size:12px;line-height:1.6;max-width:88%}
+.chat-message.user .chat-bubble{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;border-bottom-right-radius:3px}
+.chat-message.ai .chat-bubble{background:rgba(255,255,255,.05);border:1px solid var(--bd);border-bottom-left-radius:3px}
+
+/* history sidebar */
+#historySidebar{position:fixed;top:0;right:0;width:350px;height:100vh;background:rgba(8,8,16,.97);backdrop-filter:blur(20px);border-left:1px solid var(--bd);z-index:600;overflow-y:auto;padding:20px;box-shadow:-6px 0 28px rgba(0,0,0,.6);display:none}
+#historyOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:599}
+
+/* modals */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:700;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-box{background:var(--bg3);border:1px solid var(--bd);border-radius:14px;max-width:560px;width:100%;max-height:78vh;overflow-y:auto;box-shadow:0 18px 44px rgba(0,0,0,.55)}
+.modal-top{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--bg3);border-radius:14px 14px 0 0}
+.modal-top h3{font-family:var(--fd);font-size:15px;font-weight:700}
+.modal-x{width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.06);border:none;color:var(--t);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-bd{padding:20px;font-size:12px;line-height:1.7;color:rgba(255,255,255,.7)}
+.modal-bd h4{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--t);margin:14px 0 5px}
+.modal-bd h4:first-child{margin-top:0}
+.modal-bd ul{padding-left:14px}
+.modal-bd li{margin-bottom:4px}
+.modal-bd strong{color:var(--t)}
+
+@media(max-width:600px){
+  .nav-title{display:none}.unm{display:none}
+  .feat-grid{grid-template-columns:1fr 1fr}
+  .dd-grid{grid-template-columns:1fr}
+  #debateResults .arguments-container{grid-template-columns:1fr}
+  .w-inner h1{font-size:26px}
+}
+.topic-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+#topicMicSlot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+</style>
 </head>
-
 <body>
-    <div class="bg-animation">
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
+
+<div class="blobs">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+</div>
+
+<!-- NAV -->
+<nav class="navbar">
+  <a class="nav-logo" href="/debate">
+    <div class="nav-icon"><i class="fas fa-balance-scale"></i></div>
+    <span class="nav-title">AI Debate Arena</span>
+  </a>
+  <div class="nav-sep"></div>
+  <div id="headerControls"></div>
+  <div class="nav-end">
+    <button class="nbt" onclick="openHistory()"><i class="fas fa-history"></i> History</button>
+    <button class="nbt" onclick="showHelp()"><i class="fas fa-question-circle"></i></button>
+    <div class="uc">
+      <div class="uav" id="avatarIcon">?</div>
+      <span class="unm" id="usernameDisplay">User</span>
+    </div>
+    <button class="nbt red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</nav>
+
+<!-- ══════════ PAGE 1 · WELCOME ══════════ -->
+<!-- script.js sets this to display:block via showWelcome(). We pre-set flex via JS below. -->
+<section id="welcomeSection" class="section">
+  <div class="w-inner">
+    <div class="w-emblem">⚖️</div>
+    <h1>Where Ideas Clash &<br><span>Truth Emerges</span></h1>
+    <p>Three AI agents argue for, against, and judge any topic. Fully customizable tone, depth and focus.</p>
+    <div class="feat-grid">
+      <div class="feat"><i class="fas fa-robot"></i>3 AI Agents</div>
+      <div class="feat"><i class="fas fa-comments"></i>Follow-up Q&A</div>
+      <div class="feat"><i class="fas fa-sliders-h"></i>Customisable</div>
+      <div class="feat"><i class="fas fa-history"></i>Full History</div>
+      <div class="feat"><i class="fas fa-microphone"></i>Voice Input</div>
+      <div class="feat"><i class="fas fa-file-export"></i>Export PDF</div>
+    </div>
+    <button class="cta" onclick="goToConfig()">
+      <i class="fas fa-rocket"></i> Start a Debate
+    </button>
+  </div>
+</section>
+
+<!-- ══════════ PAGE 2 · CONFIG ══════════ -->
+<!-- script.js sets display:block; we style this as flex when shown via JS override -->
+<section id="inputSection" class="section">
+  <div class="cfg">
+    <div class="cfg-hd">
+      <h2><i class="fas fa-sliders-h" style="color:var(--a);margin-right:8px;font-size:16px;"></i>Configure Debate</h2>
+      <button class="back" onclick="goToWelcome()"><i class="fas fa-arrow-left"></i> Back</button>
+    </div>
+    <div class="cfg-bd">
+      <!-- script.js MUST find id="debateForm" to bind its submit listener -->
+      <form id="debateForm" onsubmit="return false;">
+
+        <div class="lbl"><i class="fas fa-comment-dots" style="color:var(--a);"></i>Debate Topic</div>
+        <div class="topic-wrapper">
+            <textarea id="topic" class="topic-ta"
+        placeholder="e.g. Should AI be regulated by governments?"
+        maxlength="500" required></textarea>
+          <div id="topicMicSlot"></div>
+      </div>
+        <div class="char-row">
+          <span><span id="charCount">0</span>/500</span>
+          <span>Be specific for best results</span>
         </div>
-    </div>
-    <div class="container">
-        <header class="header">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon"><i class="fas fa-balance-scale"></i></div>
-                    <div class="logo-text">
-                        <h1>AI Debate Arena</h1>
-                        <span class="tagline">Where Ideas Clash & Truth Emerges</span>
-                    </div>
-                </div>
-                <div class="header-controls" id="headerControls">
-                    <!-- Language selector and speech button will be added here by JS -->
-                </div>
-            </div>
-        </header>
-        <main class="main-content">
-            <section class="welcome-section" id="welcomeSection">
-                <div class="welcome-card">
-                    <div class="welcome-icon"><i class="fas fa-brain"></i></div>
-                    <h2>Welcome to the Future of Debate</h2>
-                    <p>Experience multi-agent AI collaboration where different perspectives battle it out to give you
-                        the most comprehensive analysis of any topic.</p>
-                    <div class="features-grid">
-                        <div class="feature"><i class="fas fa-robot"></i><span>3 AI Agents</span></div>
-                        <div class="feature"><i class="fas fa-comments"></i><span>Interactive Q&A</span></div>
-                        <div class="feature"><i class="fas fa-file-export"></i><span>Export Results</span></div>
-                    </div>
-                    <button class="btn-start" onclick="showDebateForm()"><i class="fas fa-rocket"></i>Start Your First
-                        Debate</button>
-                </div>
-            </section>
-            <section class="input-section" id="inputSection" style="display: none;">
-                <div class="debate-card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-lightbulb"></i> Configure Your Debate</h2>
-                        <button class="btn-back" onclick="showWelcome()"><i class="fas fa-arrow-left"></i></button>
-                    </div>
-                    <form id="debateForm" class="debate-form">
-                        <div class="form-group">
-                            <label for="topic"><i class="fas fa-comment-dots"></i>What would you like to debate?</label>
-                            <textarea id="topic" name="topic"
-                                placeholder="e.g., 'Should artificial intelligence be regulated by governments?'"
-                                required></textarea>
-                            <div class="char-counter"><span id="charCount">0</span>/500 characters</div>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-robot"></i>Choose Your AI Model</label>
-                            <div class="model-selection" id="modelSelection"></div>
-                        </div>
-                        <button type="submit" class="btn-primary" id="startDebateBtn">
-                            <span class="btn-text"><i class="fas fa-play"></i>Launch Debate</span>
-                            <div class="btn-loader" style="display: none;"><i
-                                    class="fas fa-spinner fa-spin"></i>Initializing...</div>
-                        </button>
-                    </form>
-                </div>
-            </section>
-            <section class="results-section" id="resultsSection" style="display: none;">
-                <div class="results-container">
-                    <div class="results-header">
-                        <div class="debate-info">
-                            <h2 id="currentTopic"></h2>
-                            <div class="debate-meta">
-                                <span class="model-badge" id="selectedModel"></span>
-                                <span class="status-badge" id="statusBadge">In Progress</span>
-                            </div>
-                        </div>
-                        <button class="btn-new-debate" onclick="startNewDebate()"><i class="fas fa-plus"></i>New
-                            Debate</button>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressFill"></div>
-                        </div>
-                        <div class="progress-steps">
-                            <div class="step active" id="step1"><i class="fas fa-thumbs-up"></i><span>Arguments
-                                    For</span></div>
-                            <div class="step" id="step2"><i class="fas fa-thumbs-down"></i><span>Arguments
-                                    Against</span></div>
-                            <div class="step" id="step3"><i class="fas fa-balance-scale"></i><span>Final Analysis</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="status-display" id="statusDisplay">
-                        <div class="status-content">
-                            <div class="status-icon"><i class="fas fa-cog fa-spin"></i></div>
-                            <div class="status-text">
-                                <h3 id="statusTitle">Preparing Debate Arena</h3>
-                                <p id="statusMessage">Setting up AI agents and initializing debate parameters...</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="debate-results" id="debateResults" style="display: none;"></div>
-                    <div class="followup-section" id="followupSection" style="display: none;">
-                        <div class="followup-card">
-                            <div class="followup-header">
-                                <div class="followup-icon"><i class="fas fa-comments"></i></div>
-                                <div>
-                                    <h3>Ask Follow-up Questions</h3>
-                                    <p>Get deeper insights about this debate</p>
-                                </div>
-                            </div>
-                            <div class="followup-chat" id="followupChat"></div>
-                            <form class="followup-form" id="followupForm">
-                                <input type="text" id="followupInput" placeholder="Ask a question about this debate..."
-                                    required />
-                                <button type="submit" class="btn-send" id="followupBtn"><i
-                                        class="fas fa-paper-plane"></i></button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="export-section" id="exportSection" style="display: none;">
-                        <div class="export-card">
-                            <h3><i class="fas fa-download"></i> Export Results</h3>
-                            <div class="export-buttons">
-                                <button class="btn-export" onclick="exportResults('txt')"><i
-                                        class="fas fa-file-text"></i>Text File</button>
-                                <button class="btn-export" onclick="exportResults('pdf')"><i
-                                        class="fas fa-file-pdf"></i>PDF Report</button>
-                                <button class="btn-export" onclick="copyToClipboard()"><i class="fas fa-copy"></i>Copy
-                                    to Clipboard</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-        <footer class="footer">
-            <div class="footer-content">
-                <p>&copy; 2025 AI Debate Arena. Powered by CrewAI & Advanced Language Models</p>
-                <div class="footer-links">
-                    <a href="#" onclick="showAbout()">About</a>
-                    <a href="#" onclick="showHelp()">Help</a>
-                </div>
-            </div>
-        </footer>
-    </div>
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Help & Guide</h3>
-                <button class="modal-close" onclick="closeModal('helpModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <h4>🚀 Getting Started</h4>
-                <div class="about-section">
-                    <p><strong>Step 1:</strong> Click "Start Your First Debate" on the welcome screen</p>
-                    <p><strong>Step 2:</strong> (Optional) Toggle "Live Debate Mode" ON to watch real-time streaming</p>
-                    <p><strong>Step 3:</strong> Enter your debate topic or use voice input (microphone button)</p>
-                    <p><strong>Step 4:</strong> Choose an AI model based on your needs</p>
-                    <p><strong>Step 5:</strong> Click "Launch Debate" and watch the analysis</p>
-                </div>
 
-                <h4>🤖 Choosing the Right Model</h4>
-                <div class="about-section">
-                    <ul>
-                        <li><strong>Llama 3.1 8B Instant:</strong> Fast responses, great for quick debates and general
-                            topics</li>
-                        <li><strong>Llama 3.3 70B Versatile:</strong> Most powerful, best for complex topics requiring
-                            deep reasoning</li>
-                    </ul>
-                </div>
+        <div class="lbl"><i class="fas fa-robot" style="color:var(--a2);"></i>Choose AI Model</div>
+        <!-- script.js fills this div with model cards -->
+        <div id="modelSelection"></div>
 
-                <h4>🎥 Live Debate Mode</h4>
-                <div class="about-section">
-                    <p><strong>What it does:</strong> Watch AI agents debate in real-time with typing animations</p>
-                    <p><strong>How to use:</strong> Toggle "Live Debate Mode" ON before starting your debate</p>
-                    <p><strong>Features:</strong> Live timer, status updates, character-by-character text streaming</p>
-                    <p><strong>Stop button:</strong> Click "Stop" anytime to see complete results immediately</p>
-                </div>
+        <div class="divider">Customise Your Debate</div>
 
-                <h4>🎙️ Voice Features</h4>
-                <div class="about-section">
-                    <p><strong>Speech-to-Text:</strong> Click microphone button to dictate your topic or questions</p>
-                    <p><strong>Text-to-Speech:</strong> Click speaker icons to hear arguments read aloud</p>
-                    <p><strong>Speed Control:</strong> Click sliders icon (⚙️) to adjust speech speed and pitch</p>
-                </div>
-
-                <h4>💡 Tips for Best Results</h4>
-                <div class="about-section">
-                    <ul>
-                        <li><strong>Be Specific:</strong> Clear, focused topics get better analysis</li>
-                        <li><strong>Frame as Questions:</strong> "Should X?" or "Is Y better than Z?" work well</li>
-                        <li><strong>Avoid Vague Topics:</strong> Instead of "Technology", try "Should AI replace human
-                            customer service?"</li>
-                        <li><strong>Use Live Mode:</strong> More engaging experience with real-time streaming</li>
-                        <li><strong>Use Follow-ups:</strong> Ask clarifying questions to explore specific points deeper</li>
-                        <li><strong>Check Analytics:</strong> View visualizations to understand argument strength</li>
-                    </ul>
-                </div>
-
-                <h4>📊 Understanding Analytics</h4>
-                <div class="about-section">
-                    <p><strong>Argument Strength:</strong> Shows which side won based on judge's verdict</p>
-                    <p><strong>Key Topics:</strong> Color-coded word cloud (green=FOR, red=AGAINST, blue=both)</p>
-                    <p><strong>Side Comparison:</strong> Multi-dimensional radar chart comparing both sides</p>
-                </div>
-
-                <h4>💬 Using Follow-up Questions</h4>
-                <div class="about-section">
-                    <p>After the debate completes, you can ask unlimited follow-up questions:</p>
-                    <ul>
-                        <li>"Which side had stronger evidence?"</li>
-                        <li>"Can you explain point 3 from the arguments against?"</li>
-                        <li>"What are the real-world implications?"</li>
-                        <li>"Are there any compromises between both positions?"</li>
-                    </ul>
-                    <p><strong>Tip:</strong> Use voice input (microphone button) for hands-free questions!</p>
-                </div>
-
-                <h4>📄 Exporting Results</h4>
-                <div class="about-section">
-                    <p><strong>PDF Report:</strong> Professional formatted document with all arguments and conclusion
-                    </p>
-                    <p><strong>Text File:</strong> Plain text version for easy sharing</p>
-                    <p><strong>Copy to Clipboard:</strong> Quick copy for pasting into documents or emails</p>
-                </div>
-
-                <h4>🌍 Multi-Language Support</h4>
-                <div class="about-section">
-                    <p>Click the language selector to choose from 10+ languages. Speech recognition will automatically adapt to your selected language.</p>
-                </div>
-
-                <h4>❓ Frequently Asked Questions</h4>
-                <div class="about-section">
-                    <p><strong>Q: How long does a debate take?</strong></p>
-                    <p>A: Typically 30-60 seconds depending on the model and topic complexity.</p>
-
-                    <p><strong>Q: Can I debate any topic?</strong></p>
-                    <p>A: Yes! From technology to philosophy, politics to lifestyle choices.</p>
-
-                    <p><strong>Q: Are the arguments biased?</strong></p>
-                    <p>A: Our agents are designed to present balanced perspectives. The "For" agent supports, the
-                        "Against" agent challenges, and the Judge provides neutral analysis.</p>
-
-                    <p><strong>Q: Can I save my debates?</strong></p>
-                    <p>A: Yes! Use the export options to save as PDF or text file.</p>
-                </div>
-
-                <h4>⌨️ Keyboard Shortcuts</h4>
-                <div class="about-section">
-                    <ul>
-                        <li><strong>Ctrl/Cmd + Enter:</strong> Submit debate form</li>
-                        <li><strong>Escape:</strong> Close modals</li>
-                    </ul>
-                </div>
-
-                <h4>🐛 Troubleshooting</h4>
-                <div class="about-section">
-                    <p><strong>Debate not starting?</strong> Refresh the page and try again</p>
-                    <p><strong>Slow responses?</strong> Try the faster Llama 3.1 8B model</p>
-                    <p><strong>Export not working?</strong> Check your browser's download settings</p>
-                </div>
-
-                <h4>📧 Need More Help?</h4>
-                <div class="about-section">
-                    <p>For additional support or to report issues, please visit our GitHub repository or contact
-                        support.</p>
-                </div>
-            </div>
+        <div class="dd-grid">
+          <div class="dd-row">
+            <div class="dd-lbl"><i class="fas fa-layer-group" style="color:var(--a);"></i>Argument Depth</div>
+            <select class="dd" id="depthSel" onchange="window.debateConfig.depth=this.value">
+              <option value="brief">Brief — short &amp; punchy</option>
+              <option value="standard" selected>Standard — balanced detail</option>
+              <option value="deep">Deep — thorough &amp; evidenced</option>
+            </select>
+          </div>
+          <div class="dd-row">
+            <div class="dd-lbl"><i class="fas fa-list-ol" style="color:var(--a2);"></i>Arguments per Side</div>
+            <select class="dd" id="argsSel" onchange="window.debateConfig.args=parseInt(this.value)">
+              <option value="2">2 arguments</option>
+              <option value="3">3 arguments</option>
+              <option value="4" selected>4 arguments</option>
+              <option value="5">5 arguments</option>
+              <option value="6">6 arguments</option>
+            </select>
+          </div>
         </div>
-    </div>
-    <div class="modal" id="aboutModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>About AI Debate Arena</h3>
-                <button class="modal-close" onclick="closeModal('aboutModal')"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <h4>Multi-Agent Debate System</h4>
-                <p>AI Debate Arena is an advanced multi-agent collaborative system that analyzes complex topics from
-                    multiple perspectives. Our intelligent agents work together to provide you with comprehensive,
-                    balanced insights.</p>
 
-                <h4>How It Works</h4>
-                <div class="about-section">
-                    <p><strong>🤖 Three Specialized AI Agents:</strong></p>
-                    <ul>
-                        <li><strong>Agent For:</strong> Presents 4 well-researched arguments supporting your topic with
-                            evidence and examples</li>
-                        <li><strong>Agent Against:</strong> Provides 4 analytical counterarguments highlighting
-                            potential flaws and risks</li>
-                        <li><strong>Final Judge:</strong> Delivers a clear verdict declaring which side wins with detailed reasoning</li>
-                    </ul>
-                </div>
-
-                <div class="about-section">
-                    <p><strong>🎥 Live Debate Mode:</strong></p>
-                    <p>Watch AI agents debate in real-time with typing animations! Toggle Live Mode to see arguments unfold character-by-character with live status updates and timer.</p>
-                </div>
-
-                <div class="about-section">
-                    <p><strong>💬 Interactive Follow-up System:</strong></p>
-                    <p>After the debate, ask unlimited follow-up questions to dive deeper into specific arguments,
-                        clarify points, or explore implications. Our specialized follow-up agent maintains full context
-                        of the debate.</p>
-                </div>
-
-                <div class="about-section">
-                    <p><strong>📊 Real-time Analytics:</strong></p>
-                    <p>Automatic visualization of debate results with interactive charts showing argument strength based on judge's verdict, color-coded word clouds, and multi-dimensional comparisons.</p>
-                </div>
-
-                <div class="about-section">
-                    <p><strong>🎯 Key Features:</strong></p>
-                    <ul>
-                        <li>Live streaming debate mode with typing animations</li>
-                        <li>Clear winner declaration in every debate</li>
-                        <li>Speech-to-text input (voice dictation)</li>
-                        <li>Text-to-speech output (read aloud) with adjustable speed</li>
-                        <li>Multi-language support (10+ languages)</li>
-                        <li>Interactive visualizations and analytics</li>
-                        <li>Export results as PDF or text files</li>
-                        <li>Multiple AI models to choose from</li>
-                    </ul>
-                </div>
-
-                <div class="about-section">
-                    <p><strong>⚡ Powered By:</strong></p>
-                    <p>Built with CrewAI framework and Groq's lightning-fast LLM inference, delivering intelligent
-                        multi-agent collaboration in seconds.</p>
-                </div>
-            </div>
+        <div class="chip-row">
+          <div class="chip-lbl"><i class="fas fa-theater-masks" style="color:#f093fb;"></i>Debate Tone</div>
+          <div class="chips" id="toneChips">
+            <span class="chip on" data-k="tone" data-v="balanced">Balanced</span>
+            <span class="chip" data-k="tone" data-v="aggressive">Aggressive</span>
+            <span class="chip" data-k="tone" data-v="academic">Academic</span>
+            <span class="chip" data-k="tone" data-v="casual">Casual</span>
+            <span class="chip" data-k="tone" data-v="socratic">Socratic</span>
+          </div>
         </div>
+
+        <div class="chip-row">
+          <div class="chip-lbl"><i class="fas fa-crosshairs" style="color:var(--a2);"></i>Focus Area</div>
+          <div class="chips" id="focusChips">
+            <span class="chip on" data-k="focus" data-v="general">General</span>
+            <span class="chip" data-k="focus" data-v="economic">Economic</span>
+            <span class="chip" data-k="focus" data-v="ethical">Ethical</span>
+            <span class="chip" data-k="focus" data-v="scientific">Scientific</span>
+            <span class="chip" data-k="focus" data-v="social">Social</span>
+          </div>
+        </div>
+
+        <div class="tog-row">
+          <span class="tog-lbl"><i class="fas fa-bolt" style="color:#f59e0b;"></i>Live Debate Mode</span>
+          <label class="tog">
+            <input type="checkbox" id="liveModeToggle">
+            <span class="tog-tr"></span>
+            <span class="tog-th"></span>
+          </label>
+        </div>
+
+      </form>
     </div>
-    <script src="static/script.js"></script>
-    <script src="static/speech.js"></script>
-    <script src="static/visualization.js"></script>
-    <script src="static/multilang.js"></script>
-    <script src="static/livedebate.js"></script>
+    <div class="cfg-ft">
+      <div class="cfg-err" id="cfgErr"></div>
+      <!-- script.js uses id="startDebateBtn" for the loading spinner -->
+      <button class="launch" id="startDebateBtn" type="button" onclick="doLaunch()">
+        <span class="btn-text"><i class="fas fa-rocket"></i> Launch Debate</span>
+        <span class="btn-loader"><i class="fas fa-spinner fa-spin"></i> Generating…</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ PAGE 3 · RESULTS ══════════ -->
+<section id="resultsSection" class="section">
+  <div class="res">
+
+    <div class="res-hd">
+      <div>
+        <h2 id="currentTopic"></h2>
+        <div class="res-meta">
+          <span class="badge bm" id="selectedModel"></span>
+          <span class="badge bs" id="statusBadge">In Progress</span>
+        </div>
+      </div>
+      <button class="new-btn" onclick="startNewDebate()"><i class="fas fa-plus"></i> New Debate</button>
+    </div>
+
+    <div id="errorMessage"><i class="fas fa-exclamation-triangle"></i><span id="errorText"></span></div>
+
+    <div class="prog">
+      <div class="prog-tr"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-steps">
+        <div class="step active" id="step1"><i class="fas fa-thumbs-up"></i> Arguments For</div>
+        <div class="step" id="step2"><i class="fas fa-thumbs-down"></i> Arguments Against</div>
+        <div class="step" id="step3"><i class="fas fa-balance-scale"></i> Final Analysis</div>
+      </div>
+    </div>
+
+    <div class="status-display" id="statusDisplay">
+      <div class="status-icon"><i class="fas fa-cog fa-spin"></i></div>
+      <div class="status-text">
+        <h3 id="statusTitle">Preparing Debate Arena</h3>
+        <p id="statusMessage">Setting up AI agents…</p>
+      </div>
+    </div>
+
+    <div id="debateResults"></div>
+    <div id="visualizationContainer" style="display:none;"></div>
+
+    <div id="followupSection">
+      <div class="fup">
+        <div class="fup-hd">
+          <div class="fup-ic"><i class="fas fa-comments"></i></div>
+          <div>
+            <h3>Ask Follow-up Questions</h3>
+            <p>Dive deeper into any part of this debate</p>
+          </div>
+        </div>
+        <div class="followup-chat" id="followupChat"></div>
+        <form class="followup-form" id="followupForm">
+          <input type="text" id="followupInput" placeholder="Ask a question about this debate…" required>
+          <div id="followupMicSlot"></div>
+          <button type="submit" class="btn-send" id="followupBtn"><i class="fas fa-paper-plane"></i></button>
+        </form>
+      </div>
+    </div>
+
+    <div id="exportSection">
+      <div class="exp">
+        <h3><i class="fas fa-download"></i> Export Results</h3>
+        <div class="exp-btns">
+          <button class="btn-export" onclick="exportResults('txt')"><i class="fas fa-file-alt"></i> Text</button>
+          <button class="btn-export" onclick="exportResults('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+          <button class="btn-export" onclick="copyToClipboard()"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- HISTORY SIDEBAR -->
+<div id="historySidebar">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <span style="font-family:var(--fd);font-size:15px;font-weight:700;"><i class="fas fa-history" style="margin-right:7px;color:var(--a);"></i>My Debates</span>
+    <button onclick="closeHistory()" style="background:rgba(255,255,255,.07);border:none;border-radius:6px;color:#fff;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="historyList"></div>
+</div>
+<div id="historyOverlay" onclick="closeHistory()"></div>
+
+<!-- MODALS -->
+<div class="modal" id="helpModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <h3>Help & Guide</h3>
+      <button class="modal-x" onclick="closeModal('helpModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-bd">
+      <h4>🚀 Getting Started</h4>
+      <p>Click <strong>Start a Debate</strong>, fill in your topic, pick a model, customise the settings, then hit <strong>Launch Debate</strong>.</p>
+      <h4>⚙️ Customisation</h4>
+      <ul>
+        <li><strong>Depth:</strong> Brief (short), Standard (balanced), Deep (thorough with evidence)</li>
+        <li><strong>Args per Side:</strong> 2–6 arguments each side</li>
+        <li><strong>Tone:</strong> Balanced · Aggressive · Academic · Casual · Socratic</li>
+        <li><strong>Focus:</strong> General · Economic · Ethical · Scientific · Social</li>
+        <li><strong>Live Mode:</strong> Watch arguments appear in real-time</li>
+      </ul>
+      <h4>💬 Follow-up Q&A</h4>
+      <p>Ask unlimited follow-up questions in the chat after the debate finishes.</p>
+      <h4>📜 History</h4>
+      <p>All past debates are saved. Click History in the top bar to browse them.</p>
+    </div>
+  </div>
+</div>
+<div class="modal" id="aboutModal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <h3>About</h3>
+      <button class="modal-x" onclick="closeModal('aboutModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-bd">
+      <p>Three AI agents — <strong>For</strong>, <strong>Against</strong>, and a <strong>Judge</strong> — powered by CrewAI and Groq fast inference.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MODEL_INJECTION_POINT -->
+<!-- SCRIPTS — auth.js MUST be first -->
+<script src="static/auth.js?v=1775295643"></script>
+<script src="static/script.js?v=1775295643"></script>
+<script src="static/speech.js?v=1775295643"></script>
+<script src="static/visualization.js?v=1775295643"></script>
+<script src="static/multilang.js?v=1775295643"></script>
+<script src="static/livedebate.js?v=1775295643"></script>
+<script>
+/* ─────────────────────────────────────────────────────────────
+   DEBATE CONFIG
+   script.js reads window.debateConfig in the fetch body.
+───────────────────────────────────────────────────────────── */
+window.debateConfig = { depth:'standard', args:4, tone:'balanced', focus:'general' };
+
+/* chip clicks */
+document.querySelectorAll('.chip').forEach(function(c){
+  c.addEventListener('click', function(){
+    var group = c.closest('.chips');
+    group.querySelectorAll('.chip').forEach(function(x){ x.classList.remove('on'); });
+    c.classList.add('on');
+    window.debateConfig[c.dataset.k] = c.dataset.v;
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────
+   PAGE NAVIGATION
+   script.js sets display:none/block on the three section elements.
+   We override its navigation functions so they also fix flex layout.
+───────────────────────────────────────────────────────────── */
+function _show(id) {
+  ['welcomeSection','inputSection','resultsSection'].forEach(function(sid){
+    var el = document.getElementById(sid);
+    if (!el) return;
+    el.style.display = 'none';
+    el.classList.remove('fade-in','slide-up');
+  });
+  var target = document.getElementById(id);
+  if (!target) return;
+  /* welcome and config need flex; results is block */
+  target.style.display = (id === 'resultsSection') ? 'block' : 'flex';
+  window.scrollTo(0,0);
+}
+
+function goToWelcome() { _show('welcomeSection'); }
+function goToConfig()  { _show('inputSection');   }
+function goToResults() { _show('resultsSection');  }
+
+/* Override script.js navigation (this runs after script.js loads) */
+window.showWelcome    = goToWelcome;
+window.showDebateForm = goToConfig;
+window.showResults    = goToResults;
+
+/* ─────────────────────────────────────────────────────────────
+   LAUNCH — validates then fires the form submit that script.js handles
+───────────────────────────────────────────────────────────── */
+function doLaunch() {
+  var topic = document.getElementById('topic').value.trim();
+  if (!topic) {
+    var ta = document.getElementById('topic');
+    ta.focus();
+    ta.style.borderColor = 'rgba(239,68,68,.6)';
+    setTimeout(function(){ ta.style.borderColor = ''; }, 1500);
+    return;
+  }
+  var hasModel = document.querySelector('#modelSelection input[name="model"]:checked');
+  if (!hasModel) {
+    var err = document.getElementById('cfgErr');
+    err.textContent = 'Please select an AI model.';
+    err.style.display = 'block';
+    setTimeout(function(){ err.style.display = 'none'; }, 3000);
+    return;
+  }
+  document.getElementById('cfgErr').style.display = 'none';
+  /* fire the submit event that script.js is listening to */
+  document.getElementById('debateForm').dispatchEvent(
+    new Event('submit', { cancelable:true, bubbles:true })
+  );
+}
+
+/* showError used by script.js */
+function showError(msg) {
+  var el = document.getElementById('errorMessage');
+  var tx = document.getElementById('errorText');
+  if (el && tx) { tx.textContent = msg; el.classList.add('show'); }
+  setTimeout(function(){ if(el) el.classList.remove('show'); }, 6000);
+}
+
+/* modal helpers */
+function showAbout() { document.getElementById('aboutModal').classList.add('show'); }
+function showHelp()  { document.getElementById('helpModal').classList.add('show');  }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+/* keyboard */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal.show').forEach(function(m){ m.classList.remove('show'); });
+    closeHistory();
+  }
+});
+
+/* ─────────────────────────────────────────────────────────────
+   INITIAL STATE — run after everything loads
+   script.js calls showWelcome() on DOMContentLoaded which will
+   call our override. But set it explicitly just in case.
+───────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function(){
+  _show('welcomeSection');
+});
+</script>
 </body>
-
 </html>

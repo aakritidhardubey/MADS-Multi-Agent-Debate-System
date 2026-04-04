@@ -64,15 +64,28 @@ function updateCharCount() {
 }
 
 // Load available models
+// Primary: use window.__MODELS__ injected server-side (no fetch, no caching issues)
+// Fallback: fetch /api/models with cache-busting
+window._loadedModels = {};
+
 async function loadModels() {
     try {
-        const response = await fetch('/api/models');
-        const data = await response.json();
-        
-        if (data.models && modelSelection) {
+        let models = null;
+
+        if (window.__MODELS__ && window.__MODELS__.length > 0) {
+            // Server injected the model list directly into the page — use it
+            models = window.__MODELS__;
+        } else {
+            // Fallback: fetch with cache-busting timestamp
+            const response = await fetch('/api/models?_=' + Date.now());
+            const data = await response.json();
+            models = data.models;
+        }
+
+        if (models && modelSelection) {
             modelSelection.innerHTML = '';
-            
-            data.models.forEach(model => {
+            models.forEach(model => {
+                window._loadedModels[model.id] = model.name;
                 const modelOption = createModelOption(model);
                 modelSelection.appendChild(modelOption);
             });
@@ -343,7 +356,11 @@ async function startDebate(topic, modelChoice) {
             },
             body: JSON.stringify({
                 topic: topic,
-                model_choice: modelChoice
+                model_choice: modelChoice,
+                depth: (window.debateConfig && window.debateConfig.depth) || 'standard',
+                args_per_side: (window.debateConfig && window.debateConfig.args) || 4,
+                tone: (window.debateConfig && window.debateConfig.tone) || 'balanced',
+                focus: (window.debateConfig && window.debateConfig.focus) || 'general'
             })
         });
         
@@ -377,12 +394,15 @@ function updateDebateInfo(topic, modelChoice) {
     }
     
     if (selectedModelEl) {
-        // Get model name from the selection
-        const modelNames = {
-            '1': 'Llama 3.1 8B Instant',
-            '3': 'Llama 3.3 70B Versatile'
-        };
-        selectedModelEl.textContent = modelNames[modelChoice] || 'Unknown Model';
+        // Resolve model name from the dynamically loaded model list — no hardcoded IDs
+        const modelName = (window._loadedModels && window._loadedModels[modelChoice])
+            ? window._loadedModels[modelChoice]
+            : document.querySelector(`#modelSelection input[value="${modelChoice}"]`)
+                ?.closest('.model-option')
+                ?.querySelector('h4')
+                ?.textContent
+            || modelChoice;
+        selectedModelEl.textContent = modelName;
     }
 }
 

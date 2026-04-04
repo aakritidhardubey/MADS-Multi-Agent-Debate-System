@@ -68,9 +68,7 @@ class DebateVisualization {
                         <button class="viz-tab active" data-tab="strength" onclick="debateViz.switchTab('strength')">
                             <i class="fas fa-balance-scale"></i> Argument Strength
                         </button>
-                        <button class="viz-tab" data-tab="keywords" onclick="debateViz.switchTab('keywords')">
-                            <i class="fas fa-tags"></i> Key Topics
-                        </button>
+
                         <button class="viz-tab" data-tab="comparison" onclick="debateViz.switchTab('comparison')">
                             <i class="fas fa-exchange-alt"></i> Side Comparison
                         </button>
@@ -82,9 +80,7 @@ class DebateVisualization {
                             <div class="viz-legend" id="strengthLegend"></div>
                         </div>
                         
-                        <div class="viz-panel" id="keywordsPanel">
-                            <div class="word-cloud" id="wordCloud"></div>
-                        </div>
+
                         
                         <div class="viz-panel" id="comparisonPanel">
                             <div class="comparison-metrics" id="comparisonMetrics"></div>
@@ -150,7 +146,7 @@ class DebateVisualization {
         
         // Generate visualizations
         this.createStrengthChart(analysis, summaryContent);
-        this.createWordCloud(forContent, againstContent);
+
         this.createComparisonChart(analysis);
     }
     
@@ -290,7 +286,7 @@ class DebateVisualization {
                 </div>
                 <div class="legend-note">
                     <i class="fas fa-info-circle"></i>
-                    Strength calculated from evidence keywords, argument count, and clarity
+                    Strength calculated from evidence weight, argument count, and logical clarity
                 </div>
             `;
         }
@@ -498,82 +494,7 @@ class DebateVisualization {
         ctx.fillText(overallSentiment > 0 ? 'Positive' : overallSentiment < 0 ? 'Negative' : 'Neutral', centerX, centerY - radius - 20);
     }
     
-    createWordCloud(forText, againstText) {
-        const wordCloud = document.getElementById('wordCloud');
-        if (!wordCloud) return;
-        
-        // Extract keywords
-        const forKeywords = this.extractKeywords(forText);
-        const againstKeywords = this.extractKeywords(againstText);
-        
-        // Create separate maps for FOR and AGAINST
-        const forMap = new Map();
-        const againstMap = new Map();
-        
-        forKeywords.forEach(kw => {
-            forMap.set(kw.word, kw.count);
-        });
-        
-        againstKeywords.forEach(kw => {
-            againstMap.set(kw.word, kw.count);
-        });
-        
-        // Combine all unique words
-        const allWords = new Set([...forMap.keys(), ...againstMap.keys()]);
-        const wordData = Array.from(allWords).map(word => {
-            const forCount = forMap.get(word) || 0;
-            const againstCount = againstMap.get(word) || 0;
-            const totalCount = forCount + againstCount;
-            const side = forCount > againstCount ? 'for' : againstCount > forCount ? 'against' : 'neutral';
-            
-            return { word, count: totalCount, side, forCount, againstCount };
-        });
-        
-        // Sort by frequency and take top 40
-        const sortedWords = wordData.sort((a, b) => b.count - a.count).slice(0, 40);
-        
-        // Generate word cloud HTML with colors based on side
-        wordCloud.innerHTML = `
-            <div class="word-cloud-legend">
-                <span class="legend-for"><i class="fas fa-circle"></i> Arguments For</span>
-                <span class="legend-against"><i class="fas fa-circle"></i> Arguments Against</span>
-                <span class="legend-neutral"><i class="fas fa-circle"></i> Both Sides</span>
-            </div>
-            <div class="word-cloud-container">
-                ${sortedWords.map((item, index) => {
-                    const size = Math.min(48, 14 + item.count * 4);
-                    const opacity = Math.min(1, 0.6 + item.count * 0.08);
-                    const colorClass = `cloud-word-${item.side}`;
-                    const delay = index * 0.05;
-                    
-                    return `<span class="cloud-word ${colorClass}" 
-                                  style="font-size: ${size}px; opacity: ${opacity}; animation-delay: ${delay}s"
-                                  title="${item.word}: ${item.forCount} for, ${item.againstCount} against"
-                                  data-count="${item.count}">
-                                ${item.word}
-                            </span>`;
-                }).join('')}
-            </div>
-        `;
-    }
     
-    extractKeywords(text) {
-        const stopWords = new Set(['the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of', 'as', 'by', 'that', 'this', 'it', 'from', 'be', 'are', 'was', 'were', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can']);
-        
-        const words = text.toLowerCase()
-            .replace(/[^\w\s]/g, '')
-            .split(/\s+/)
-            .filter(w => w.length > 3 && !stopWords.has(w));
-        
-        const wordCount = new Map();
-        words.forEach(word => {
-            wordCount.set(word, (wordCount.get(word) || 0) + 1);
-        });
-        
-        return Array.from(wordCount.entries())
-            .map(([word, count]) => ({ word, count }))
-            .sort((a, b) => b.count - a.count);
-    }
     
     createComparisonChart(analysis) {
         // Update metrics only (no canvas chart)

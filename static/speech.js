@@ -262,7 +262,7 @@ class SpeechManager {
     
     // Update microphone button state
     updateMicButton(isActive) {
-        const micButtons = document.querySelectorAll('.mic-btn');
+        const micButtons = document.querySelectorAll('.mic-btn, .mic-btn-topic, .mic-btn-followup');
         micButtons.forEach(btn => {
             if (isActive) {
                 btn.classList.add('listening');
@@ -313,34 +313,39 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function addSpeechControls() {
-    // Add microphone button to topic textarea
-    const topicTextarea = document.getElementById('topic');
-    if (topicTextarea && topicTextarea.parentElement) {
-        const micBtn = document.createElement('button');
-        micBtn.type = 'button';
-        micBtn.className = 'mic-btn';
-        micBtn.title = 'Speech to Text';
-        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-        micBtn.onclick = () => speechManager.startListening(topicTextarea);
-        
-        topicTextarea.parentElement.style.position = 'relative';
-        topicTextarea.parentElement.appendChild(micBtn);
+    // ── Topic mic: injected into #topicMicSlot in index.html ──────────────────
+    // index.html has a <div id="topicMicSlot"> right after the textarea.
+    // We just populate it here. Works regardless of display:none state.
+    function buildTopicMic() {
+        const slot = document.getElementById('topicMicSlot');
+        const ta   = document.getElementById('topic');
+        if (!slot || !ta || slot.querySelector('button')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.id   = 'topicMicBtn';
+        btn.className = 'mic-btn-topic';
+        btn.title = 'Speak your topic';
+        btn.innerHTML = '<i class="fas fa-microphone"></i><span>Speak</span>';
+        btn.onclick = () => speechManager.startListening(ta);
+        slot.appendChild(btn);
     }
-    
-    // Add microphone button to follow-up input
-    const followupInput = document.getElementById('followupInput');
-    if (followupInput && followupInput.parentElement) {
-        const micBtn = document.createElement('button');
-        micBtn.type = 'button';
-        micBtn.className = 'mic-btn mic-btn-small';
-        micBtn.title = 'Speech to Text';
-        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-        micBtn.onclick = () => speechManager.startListening(followupInput);
-        
-        followupInput.parentElement.style.position = 'relative';
-        followupInput.parentElement.appendChild(micBtn);
+    buildTopicMic();
+
+    // ── Follow-up mic: injected into #followupMicSlot in index.html ───────────
+    function buildFollowupMic() {
+        const slot = document.getElementById('followupMicSlot');
+        const ta   = document.getElementById('followupInput');
+        if (!slot || !ta || slot.querySelector('button')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'mic-btn-followup';
+        btn.title = 'Speak your question';
+        btn.innerHTML = '<i class="fas fa-microphone"></i>';
+        btn.onclick = () => speechManager.startListening(ta);
+        slot.appendChild(btn);
     }
-    
+    buildFollowupMic();
+
     // Add speaker buttons to debate results (will be added dynamically when results load)
     observeDebateResults();
 }
