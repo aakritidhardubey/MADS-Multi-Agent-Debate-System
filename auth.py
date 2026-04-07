@@ -17,11 +17,18 @@ pwd_context = CryptContext(
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
+def _safe_password(password: str) -> str:
+    # bcrypt supports max 72 bytes
+    return password.encode("utf-8")[:72].decode("utf-8", "ignore")
+
+
 def hash_password(password: str) -> str:
+    password = _safe_password(password)
     return pwd_context.hash(password)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
+    plain = _safe_password(plain)
     return pwd_context.verify(plain, hashed)
 
 
