@@ -67,12 +67,12 @@ class FollowUpRequest(BaseModel):
 # Add new models here ONLY — everything else reads from this list automatically.
 
 MODELS = [
-    {"id": "1", "name": "Llama 3.1 8B Instant",   "description": "Fast & Lightweight"},
-    {"id": "3", "name": "Llama 3.3 70B Versatile", "description": "Most Capable"},
-    {"id": "4", "name": "Llama 4 Scout 17B",       "description": "Long Context & Smart"},
-    {"id": "5", "name": "Kimi K2",                 "description": "Strong Reasoning"},
-    {"id": "6", "name": "Qwen3 32B",               "description": "Multilingual & Sharp"},
-    {"id": "7", "name": "GPT-OSS 20B",             "description": "OpenAI Open Weight"},
+{"id": "1", "name": "Llama 3.1 8B Instant",    "description": "Fast & Lightweight"},
+{"id": "2", "name": "Llama 3.3 70B Versatile",  "description": "Most Capable Llama"},
+{"id": "3", "name": "Llama 4 Scout 17B",         "description": "Long Context & Smart"},
+{"id": "4", "name": "GPT-OSS 120B",              "description": "Best Reasoning"},
+{"id": "5", "name": "GPT-OSS 20B",               "description": "OpenAI Open Weight"},
+{"id": "6", "name": "Qwen3 32B",                 "description": "Multilingual & Sharp"},
 ]
 
 # id -> name map used by debate and followup routes

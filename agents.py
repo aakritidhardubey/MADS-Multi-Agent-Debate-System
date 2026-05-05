@@ -12,12 +12,12 @@ os.environ["GROQ_API_KEY"] = groq_api_key
 
 # All model IDs must have the groq/ prefix so CrewAI/LiteLLM routes them correctly
 MODEL_MAP = {
-    "Llama 3.1 8B Instant":  "groq/llama-3.1-8b-instant",
-    "Llama 3.3 70B Versatile": "groq/llama-3.3-70b-versatile",
-    "Llama 4 Scout 17B":     "groq/meta-llama/llama-4-scout-17b-16e-instruct",
-    "Kimi K2":               "groq/moonshotai/kimi-k2-instruct",
-    "Qwen3 32B":             "groq/qwen/qwen3-32b",
-    "GPT-OSS 20B":           "groq/openai/gpt-oss-20b",
+"Llama 3.1 8B Instant":   "groq/llama-3.1-8b-instant",
+"Llama 3.3 70B Versatile": "groq/llama-3.3-70b-versatile",
+"Llama 4 Scout 17B":      "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+"GPT-OSS 120B":           "groq/openai/gpt-oss-120b",
+"GPT-OSS 20B":            "groq/openai/gpt-oss-20b",
+"Qwen3 32B":              "groq/qwen/qwen3-32b",
 }
 
 def select_model(choice):
