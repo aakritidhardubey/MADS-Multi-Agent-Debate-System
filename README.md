@@ -1,286 +1,196 @@
-# 🎭 AI Debate Arena
+# AI Debate Arena
 
-**Multi-Agent Debate System** - An intelligent platform where AI agents debate any topic from multiple perspectives, providing comprehensive analysis with interactive follow-up capabilities.
+A multi-agent debate platform where AI agents argue for, against, and judge any topic — with full user authentication, debate history, and customizable debate parameters.
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.122-green.svg)](https://fastapi.tiangolo.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com/)
 [![CrewAI](https://img.shields.io/badge/CrewAI-1.6-purple.svg)](https://www.crewai.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## ✨ Features
+## Overview
 
-### 🤖 **Multi-Agent System**
-- **Agent For:** Presents exactly 4 well-researched arguments supporting your topic
-- **Agent Against:** Provides exactly 4 analytical counterarguments with evidence
-- **Final Judge:** Delivers a balanced conclusion without repeating arguments
-- **Follow-up Agent:** Answers unlimited questions about the debate with full context
+AI Debate Arena spins up three specialized AI agents for every debate:
 
-### 💬 **Interactive Experience**
-- Beautiful, responsive web interface with smooth animations
-- Real-time debate generation with progress tracking
-- Side-by-side argument comparison
-- Chat-like follow-up Q&A system
-- Export results as PDF or text files
+- **Agent For** — builds a set of evidence-based arguments supporting the topic
+- **Agent Against** — constructs counterarguments challenging the topic
+- **Judge** — delivers a structured verdict with a named winner and reasoning
+- **Follow-up Agent** — answers unlimited questions about the completed debate
 
-### ⚡ **Powered by Advanced AI**
-- **Llama 3.1 8B Instant** - Fast & balanced responses
-- **Llama 3.3 70B Versatile** - Most capable, best reasoning
-- Lightning-fast inference via Groq
+Users register, log in, and all debates are saved to their personal history.
 
 ---
 
-## 🚀 Quick Start
+## Features
+
+- Configurable argument count (2–6 per side), depth (brief / standard / deep), tone (balanced, aggressive, academic, casual, Socratic), and focus area (general, economic, ethical, scientific, social)
+- Live Debate Mode streams results in real time via Server-Sent Events
+- Follow-up Q&A chat anchored to the full debate context
+- Debate history sidebar with per-debate delete
+- Export results as PDF, plain text, or clipboard copy
+- Voice input on topic field and follow-up form
+- JWT-based authentication (72-hour tokens, bcrypt password hashing)
+- MongoDB Atlas persistence via Motor (async)
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI, Python 3.12 |
+| AI Orchestration | CrewAI 1.6, LiteLLM |
+| LLM Provider | Groq (Llama, Kimi K2, Qwen3, GPT-OSS) |
+| Database | MongoDB Atlas (Motor async driver) |
+| Auth | JWT (python-jose), passlib bcrypt |
+| Frontend | Vanilla JS, HTML5, CSS3 |
+| Deployment | Render (render.yaml included) |
+
+---
+
+## Project Structure
+
+```
+ai-debate-arena/
+├── app.py              # FastAPI app — routes, auth, debate, history endpoints
+├── agents.py           # CrewAI agent definitions (For, Against, Judge, Follow-up)
+├── tasks.py            # Task builders with tone/depth/focus instructions
+├── auth.py             # JWT creation, verification, password hashing
+├── database.py         # MongoDB connection, user and debate CRUD
+├── main.py             # CLI entry point for running debates in the terminal
+├── render.yaml         # Render deployment config
+├── requirements.txt    # Python dependencies
+├── pyproject.toml      # Project metadata
+├── .env                # Environment variables (not committed)
+└── static/
+    ├── index.html      # Main debate UI
+    ├── login.html      # Auth page (register / login)
+    ├── script.js       # Core frontend logic
+    ├── auth.js         # Auth flow
+    ├── speech.js/css   # Voice input
+    ├── livedebate.js/css   # SSE live mode
+    ├── visualization.js/css # Results visualization
+    ├── multilang.js/css     # Multilingual support
+    └── style.css       # Global styles
+```
+
+---
+
+## Getting Started
 
 ### Prerequisites
+
 - Python 3.12+
-- Groq API Key ([Get one free](https://console.groq.com/))
+- A [Groq API key](https://console.groq.com/) (free tier available)
+- A MongoDB Atlas connection string
 
 ### Installation
 
-1. **Clone the repository**
 ```bash
 git clone https://github.com/YOUR_USERNAME/ai-debate-arena.git
 cd ai-debate-arena
 ```
 
-2. **Install dependencies**
+Install dependencies:
+
 ```bash
-# Using uv (recommended)
+# Recommended — uses uv lockfile for reproducible installs
 uv sync
 
-# Or using pip
+# Or with pip
 pip install -r requirements.txt
 ```
 
-3. **Set up environment variables**
-
 Create a `.env` file:
+
 ```env
-GROQ_API_KEY=your_groq_api_key_here
+GROQ_API_KEY=your_groq_api_key
+MONGODB_URI=your_mongodb_atlas_connection_string
+SECRET_KEY=a_random_secret_for_jwt_signing
 ```
 
-4. **Run the application**
+Start the server:
+
 ```bash
-# Web interface (recommended)
 python app.py
+```
 
-# Or use the quick start script
-python start.py
+Open `http://127.0.0.1:8000` — you'll land on the login page.
 
-# CLI version (optional)
+### CLI Mode
+
+Run a debate directly in the terminal without the web interface:
+
+```bash
 python main.py
 ```
 
-5. **Open your browser**
-```
-http://127.0.0.1:8000
-```
+---
+
+## How It Works
+
+1. Register or log in — credentials are stored securely in MongoDB
+2. Configure your debate — topic, model, depth, tone, focus, and argument count
+3. Launch — three agents run sequentially via CrewAI:
+   - Agent For produces N supporting arguments
+   - Agent Against produces N counterarguments
+   - Judge delivers a structured verdict (VERDICT / REASONING / KEY STRENGTHS / WEAKNESSES / FINAL RECOMMENDATION)
+4. Ask follow-ups — the Follow-up Agent has full debate context
+5. Export or revisit — results are saved to your history and exportable as PDF or text
 
 ---
 
-## 🎯 How It Works
+## API Reference
 
-1. **Enter Your Topic** - Any question or statement you want analyzed
-2. **Choose AI Model** - Select based on speed vs. depth needs
-3. **Watch the Debate** - Three agents collaborate in real-time:
-   - 🟢 **For:** 4 supporting arguments
-   - 🔴 **Against:** 4 opposing arguments
-   - 🔵 **Judge:** Balanced conclusion
-4. **Ask Follow-ups** - Dive deeper with unlimited questions
-5. **Export Results** - Save as PDF, text, or copy to clipboard
-
----
-
-## 📖 Usage Examples
-
-### Good Debate Topics:
-- "Should artificial intelligence be regulated by governments?"
-- "Is remote work more productive than office work?"
-- "Should social media platforms be held liable for user content?"
-- "Is nuclear energy the solution to climate change?"
-
-### Follow-up Questions:
-- "Which side had stronger evidence?"
-- "Can you explain point 3 from the arguments against?"
-- "What are the real-world implications?"
-- "Are there any compromises between both positions?"
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | No | Create a new account |
+| POST | `/api/auth/login` | No | Log in, receive JWT |
+| POST | `/api/debate` | Yes | Run a full debate |
+| POST | `/api/debate/stream` | Yes | Run a debate with SSE streaming |
+| POST | `/api/followup` | Yes | Ask a follow-up question |
+| GET | `/api/history` | Yes | Fetch user's debate history |
+| DELETE | `/api/history/{id}` | Yes | Delete a specific debate |
+| GET | `/api/models` | No | List available AI models |
+| GET | `/health` | No | Health check |
 
 ---
 
-## 🌐 Deployment
+## Available Models
 
-### Deploy to Render (Recommended)
+| ID | Model | Notes |
+|---|---|---|
+| 1 | Llama 3.1 8B Instant | Fast, lightweight |
+| 3 | Llama 3.3 70B Versatile | Most capable |
+| 4 | Llama 4 Scout 17B | Long context |
+| 5 | Kimi K2 | Strong reasoning |
+| 6 | Qwen3 32B | Multilingual |
+| 7 | GPT-OSS 20B | OpenAI open weight |
 
-1. **Push to GitHub**
-```bash
-git add .
-git commit -m "Initial commit"
-git push
-```
-
-2. **Deploy on Render**
-   - Go to [Render Dashboard](https://dashboard.render.com/)
-   - Click "New +" → "Blueprint"
-   - Connect your GitHub repository
-   - Add environment variable: `GROQ_API_KEY`
-   - Click "Apply"
-
-3. **Done!** Your app will be live in 3-5 minutes
-
-📚 **Detailed Instructions:** See [DEPLOYMENT.md](DEPLOYMENT.md)
+All models are served via Groq's inference API.
 
 ---
 
-## 🗂️ Project Structure
+## Deployment
 
-```
-ai-debate-arena/
-├── app.py                 # FastAPI web server
-├── agents.py              # AI agent definitions (For, Against, Judge, Follow-up)
-├── tasks.py               # Debate task configurations
-├── requirements.txt       # Python dependencies
-├── pyproject.toml         # Project configuration
-├── render.yaml            # Render deployment config
-├── .env                   # Environment variables (not in git!)
-├── .gitignore             # Git ignore rules
-├── README.md              # This file
-├── DEPLOYMENT.md          # Deployment guide
-└── static/
-    ├── index.html         # Web interface
-    ├── style.css          # Styling
-    └── script.js          # Frontend logic
-```
+The repo includes a `render.yaml` for one-click deployment to [Render](https://render.com/).
+
+1. Push to GitHub
+2. Go to Render Dashboard → New → Blueprint → connect your repo
+3. Set environment variables: `GROQ_API_KEY`, `MONGODB_URI`, `SECRET_KEY`
+4. Click Apply — live in ~3 minutes
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ---
 
-## 🎨 Screenshots
+## Contributing
 
-### Welcome Screen
-Beautiful landing page with feature highlights and smooth animations.
-
-### Debate Configuration
-Choose your topic and AI model with an intuitive interface.
-
-### Side-by-Side Results
-Compare arguments for and against in a clean, organized layout.
-
-### Interactive Follow-ups
-Chat-like interface for asking follow-up questions.
-
-### Export Options
-Download professional PDF reports or copy to clipboard.
+Bug reports, feature requests, and pull requests are welcome. Open an issue to discuss larger changes before submitting a PR.
 
 ---
 
-## 🛠️ Tech Stack
+## License
 
-**Backend:**
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
-- [CrewAI](https://www.crewai.com/) - Multi-agent orchestration
-- [Groq](https://groq.com/) - Lightning-fast LLM inference
-- Python 3.12
-
-**Frontend:**
-- Vanilla JavaScript (no frameworks!)
-- HTML5 & CSS3
-- [Font Awesome](https://fontawesome.com/) - Icons
-- [jsPDF](https://github.com/parallax/jsPDF) - PDF generation
-
-**Deployment:**
-- [Render](https://render.com/) - Cloud hosting
-- Docker-ready
-- Environment-based configuration
-
----
-
-## 📊 API Endpoints
-
-- `GET /` - Web interface
-- `GET /health` - Health check
-- `GET /api/models` - Available AI models
-- `POST /api/debate` - Start a debate
-- `POST /api/followup` - Ask follow-up questions
-
----
-
-## 🎓 Use Cases
-
-- **Academic Research** - Explore multiple perspectives on complex topics
-- **Decision Making** - Get balanced analysis before important choices
-- **Critical Thinking** - Practice evaluating arguments
-- **Debate Preparation** - Research both sides of an argument
-- **Education** - Teaching tool for logic and reasoning
-- **Policy Analysis** - Understand implications of proposals
-
----
-
-## 💡 Tips for Best Results
-
-- **Be Specific:** "Should AI replace customer service?" vs. "Technology"
-- **Frame as Questions:** "Should X?" or "Is Y better than Z?"
-- **Use Follow-ups:** Ask clarifying questions for deeper insights
-- **Choose Right Model:** 
-  - Llama 3.1 8B for quick, general topics
-  - Llama 3.3 70B for complex, nuanced debates
-
----
-
-## 🐛 Troubleshooting
-
-**Issue:** Debate not starting
-- **Solution:** Refresh page, check API key is set
-
-**Issue:** Slow responses
-- **Solution:** Try Llama 3.1 8B (faster model)
-
-**Issue:** Export not working
-- **Solution:** Check browser download settings
-
-**Issue:** Follow-up not responding
-- **Solution:** Ensure debate completed successfully first
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-- Report bugs
-- Suggest features
-- Submit pull requests
-- Improve documentation
-
----
-
-## 📄 License
-
-MIT License - Free to use and modify!
-
----
-
-## 🙏 Acknowledgments
-
-- **[CrewAI](https://www.crewai.com/)** - Multi-agent framework
-- **[Groq](https://groq.com/)** - Lightning-fast LLM inference
-- **[Render](https://render.com/)** - Easy deployment platform
-- **[Font Awesome](https://fontawesome.com/)** - Beautiful icons
-
----
-
-## 📧 Contact & Support
-
-- **Issues:** [GitHub Issues](https://github.com/YOUR_USERNAME/ai-debate-arena/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/YOUR_USERNAME/ai-debate-arena/discussions)
-
----
-
-## 🌟 Star History
-
-If you find this project useful, please consider giving it a star! ⭐
-
----
-
-**Built with ❤️ using AI and modern web technologies**
-
-*Ready to deploy? Check out [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step instructions!*
+MIT — free to use and modify.
