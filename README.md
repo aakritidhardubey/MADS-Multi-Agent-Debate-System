@@ -1,6 +1,6 @@
 # AI Debate Arena
 
-A multi-agent debate platform where AI agents argue for, against, and judge any topic — with full user authentication, debate history, and customizable debate parameters.
+A multi-agent debate platform where AI agents argue for, against, and judge any topic — with full user authentication, debate history, and customizable debate parameters. Project is live at :-[![link](https://mads-multi-agent-debate-system.onrender.com)]
 
 [![Python](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-latest-green.svg)](https://fastapi.tiangolo.com/)
